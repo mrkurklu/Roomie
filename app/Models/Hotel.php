@@ -9,7 +9,11 @@ class Hotel extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'address', 'phone', 'email'];
+    protected $fillable = ['name', 'address', 'phone', 'email', 'description', 'amenities', 'welcome_message'];
+
+    protected $casts = [
+        'amenities' => 'array',
+    ];
 
     public function users()
     {
@@ -24,11 +28,6 @@ class Hotel extends Model
     public function roomTypes()
     {
         return $this->hasMany(RoomType::class);
-    }
-
-    public function reservations()
-    {
-        return $this->hasMany(Reservation::class);
     }
 
     public function tasks()
@@ -64,5 +63,10 @@ class Hotel extends Model
     public function requests()
     {
         return $this->hasMany(Request::class);
+    }
+
+    public function events()
+    {
+        return $this->hasMany(Event::class);
     }
 }

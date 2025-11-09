@@ -19,8 +19,8 @@
                 {{ __('requests') }}
             </a>
             <a href="{{ route('guest.services') }}" class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors {{ $active === 'services' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' }}">
-                <i data-lucide="utensils-crossed" class="w-4 h-4"></i>
-                {{ __('room_service') }}
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                Hizmetlerimiz
             </a>
             <a href="{{ route('guest.amenities') }}" class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors {{ $active === 'amenities' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' }}">
                 <i data-lucide="wifi" class="w-4 h-4"></i>

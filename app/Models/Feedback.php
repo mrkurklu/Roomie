@@ -10,7 +10,7 @@ class Feedback extends Model
     use HasFactory;
 
     protected $fillable = [
-        'hotel_id', 'user_id', 'reservation_id', 'guest_name', 'guest_email',
+        'hotel_id', 'user_id', 'guest_name', 'guest_email',
         'rating', 'comment', 'category', 'is_public', 'is_responded'
     ];
 
@@ -27,11 +27,6 @@ class Feedback extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function reservation()
-    {
-        return $this->belongsTo(Reservation::class);
     }
 }
 

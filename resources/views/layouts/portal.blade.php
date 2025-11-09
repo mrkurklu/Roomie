@@ -20,13 +20,17 @@
     <div class="min-h-screen bg-background text-foreground pb-24 md:pb-6">
         @include('layouts.portal.topbar', ['role' => $role ?? 'Yönetim'])
         
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-12 gap-6 py-6">
-            <aside class="hidden md:block col-span-12 md:col-span-3 lg:col-span-3 xl:col-span-2 space-y-4">
-                @yield('sidebar')
-            </aside>
-            <main class="col-span-12 md:col-span-9 lg:col-span-9 xl:col-span-10 space-y-6">
-                @yield('content')
-            </main>
+        <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
+            <div class="mx-auto max-w-[1920px] flex gap-6">
+                <aside class="hidden md:block w-64 flex-shrink-0 space-y-4">
+                    @yield('sidebar')
+                </aside>
+                <main class="flex-1 min-w-0 flex justify-center">
+                    <div class="w-full max-w-6xl">
+                        @yield('content')
+                    </div>
+                </main>
+            </div>
         </div>
         
         @include('layouts.portal.mobile-bottom-nav', ['role' => $role ?? 'Yönetim', 'activeTab' => $activeTab ?? 'dashboard'])

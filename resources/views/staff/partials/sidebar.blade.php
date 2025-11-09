@@ -26,6 +26,10 @@
                 <i data-lucide="utensils-crossed" class="w-4 h-4"></i>
                 {{ __('resources') }}
             </a>
+            <a href="{{ route('staff.events') }}" class="flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors {{ $active === 'events' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent' }}">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                Etkinlikler
+            </a>
         </x-ui.card-content>
     </x-ui.card>
     

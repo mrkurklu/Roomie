@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\Ticket;
 use App\Models\Schedule;
 use App\Models\Resource;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -287,6 +288,105 @@ class StaffController extends Controller
             return redirect()->route('staff.inbox')->with('success', 'Mesaj başarıyla gönderildi.');
         } catch (\Exception $e) {
             return redirect()->route('staff.inbox')->with('error', 'Mesaj gönderilirken bir hata oluştu.');
+        }
+    }
+
+    public function events()
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        $events = $hotelId ? Event::where('hotel_id', $hotelId)
+            ->orderBy('priority', 'desc')
+            ->orderBy('start_date', 'asc')
+            ->paginate(15) : collect([]);
+
+        return view('staff.events', [
+            'role' => 'Personel',
+            'activeTab' => 'events',
+            'events' => $events,
+        ]);
+    }
+
+    public function storeEvent(Request $request)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after:start_date',
+            'location' => 'nullable|string|max:255',
+            'image_path' => 'nullable|string|max:255',
+            'is_active' => 'boolean',
+            'priority' => 'nullable|integer|min:0|max:100',
+        ]);
+
+        try {
+            Event::create([
+                'hotel_id' => $hotelId,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'] ?? null,
+                'location' => $validated['location'] ?? null,
+                'image_path' => $validated['image_path'] ?? null,
+                'is_active' => $validated['is_active'] ?? true,
+                'priority' => $validated['priority'] ?? 0,
+            ]);
+
+            return redirect()->route('staff.events')->with('success', 'Etkinlik başarıyla oluşturuldu.');
+        } catch (\Exception $e) {
+            return redirect()->route('staff.events')->with('error', 'Etkinlik oluşturulurken bir hata oluştu.');
+        }
+    }
+
+    public function updateEvent(Request $request, Event $event)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        // Etkinliğin bu otelin etkinliği olduğunu kontrol et
+        if ($event->hotel_id !== $hotelId) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'description' => 'nullable|string',
+            'start_date' => 'sometimes|date',
+            'end_date' => 'nullable|date|after:start_date',
+            'location' => 'nullable|string|max:255',
+            'image_path' => 'nullable|string|max:255',
+            'is_active' => 'boolean',
+            'priority' => 'nullable|integer|min:0|max:100',
+        ]);
+
+        try {
+            $event->update($validated);
+            return redirect()->route('staff.events')->with('success', 'Etkinlik başarıyla güncellendi.');
+        } catch (\Exception $e) {
+            return redirect()->route('staff.events')->with('error', 'Etkinlik güncellenirken bir hata oluştu.');
+        }
+    }
+
+    public function deleteEvent(Event $event)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        // Etkinliğin bu otelin etkinliği olduğunu kontrol et
+        if ($event->hotel_id !== $hotelId) {
+            abort(404);
+        }
+
+        try {
+            $event->delete();
+            return redirect()->route('staff.events')->with('success', 'Etkinlik başarıyla silindi.');
+        } catch (\Exception $e) {
+            return redirect()->route('staff.events')->with('error', 'Etkinlik silinirken bir hata oluştu.');
         }
     }
 }

@@ -58,39 +58,6 @@
         </div>
     </section>
 
-    <!-- Booking Form Section -->
-    <section class="py-12 bg-card border-y">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <x-ui.card class="border-none shadow-lg">
-                <x-ui.card-header>
-                    <x-ui.card-title class="text-center">Rezervasyon Yapın</x-ui.card-title>
-                </x-ui.card-header>
-                <x-ui.card-content>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium">Giriş Tarihi</label>
-                            <x-ui.input type="date" />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium">Çıkış Tarihi</label>
-                            <x-ui.input type="date" />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium">Misafir Sayısı</label>
-                            <x-ui.input type="number" placeholder="2" min="1" />
-                        </div>
-                        <div class="flex items-end">
-                            <x-ui.button class="w-full gap-2">
-                                <i data-lucide="search" class="w-4 h-4"></i>
-                                Ara
-                            </x-ui.button>
-                        </div>
-                    </div>
-                </x-ui.card-content>
-            </x-ui.card>
-        </div>
-    </section>
-
     <!-- Rooms Section -->
     <section class="py-20">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -136,7 +103,7 @@
 
                             <a href="{{ route('rooms.show', $room->id) }}" class="w-full">
                                 <x-ui.button class="w-full gap-2">
-                                    Rezervasyon Yap
+                                    Detayları Görüntüle
                                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                                 </x-ui.button>
                             </a>

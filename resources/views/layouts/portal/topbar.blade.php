@@ -69,9 +69,6 @@
                         :class="isAnimating ? 'scale-150 opacity-100' : ''"
                     ></span>
                 </button>
-                
-                <!-- Label Text -->
-                <span class="text-xs text-muted-foreground">{{ __('select_language') ?? 'Tema Seçin' }}</span>
             </div>
             
             <!-- Bildirimler -->

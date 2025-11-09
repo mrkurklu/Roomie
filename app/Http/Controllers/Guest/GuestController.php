@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Request as GuestRequest;
 use App\Models\Feedback;
-use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\User;
+use App\Models\Event;
 use Illuminate\Http\Request;
 
 class GuestController extends Controller
@@ -18,23 +18,46 @@ class GuestController extends Controller
         $user = auth()->user();
         $hotelId = $user->hotel_id;
 
-        $reservations = Reservation::where('user_id', $user->id)
-            ->with(['room.roomType'])
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
-
-        $rooms = $hotelId ? Room::where('hotel_id', $hotelId)
-            ->where('status', 'available')
-            ->with('roomType')
-            ->take(6)
+        $hotel = $user->hotel;
+        
+        $events = $hotelId ? Event::where('hotel_id', $hotelId)
+            ->where('is_active', true)
+            ->where(function($q) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now());
+            })
+            ->orderBy('priority', 'desc')
+            ->orderBy('start_date', 'asc')
+            ->take(10)
             ->get() : collect([]);
 
         return view('guest.welcome', [
             'role' => 'Misafir',
             'activeTab' => 'welcome',
-            'reservations' => $reservations,
-            'rooms' => $rooms,
+            'hotel' => $hotel,
+            'events' => $events,
+        ]);
+    }
+    
+    public function showEvent(Event $event)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        // Etkinliğin bu otelin etkinliği olduğunu kontrol et
+        if ($event->hotel_id !== $hotelId) {
+            abort(404);
+        }
+
+        // Etkinliğin aktif olduğunu kontrol et
+        if (!$event->is_active) {
+            abort(404);
+        }
+
+        return view('guest.event-detail', [
+            'role' => 'Misafir',
+            'activeTab' => 'welcome',
+            'event' => $event,
         ]);
     }
     
@@ -97,7 +120,6 @@ class GuestController extends Controller
 
         $requests = GuestRequest::where('hotel_id', $hotelId)
             ->where('user_id', $user->id)
-            ->with(['reservation'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -119,17 +141,12 @@ class GuestController extends Controller
     public function services()
     {
         $user = auth()->user();
-        $hotelId = $user->hotel_id;
-
-        $rooms = Room::where('hotel_id', $hotelId)
-            ->where('status', 'available')
-            ->with('roomType')
-            ->get();
+        $hotel = $user->hotel;
 
         return view('guest.services', [
             'role' => 'Misafir',
             'activeTab' => 'services',
-            'rooms' => $rooms,
+            'hotel' => $hotel,
         ]);
     }
     
@@ -155,30 +172,22 @@ class GuestController extends Controller
                 'role' => 'Misafir',
                 'activeTab' => 'feedback',
                 'feedbacks' => collect([]),
-                'reservations' => collect([]),
             ]);
         }
 
         try {
             $feedbacks = Feedback::where('hotel_id', $hotelId)
                 ->where('user_id', $user->id)
-                ->with(['reservation'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
         } catch (\Exception $e) {
             $feedbacks = collect([]);
         }
 
-        $reservations = Reservation::where('user_id', $user->id)
-            ->where('status', 'confirmed')
-            ->with(['room.roomType'])
-            ->get();
-
         return view('guest.feedback', [
             'role' => 'Misafir',
             'activeTab' => 'feedback',
             'feedbacks' => $feedbacks,
-            'reservations' => $reservations,
         ]);
     }
 
@@ -188,7 +197,6 @@ class GuestController extends Controller
         $hotelId = $user->hotel_id;
 
         $validated = $request->validate([
-            'reservation_id' => 'nullable|exists:reservations,id',
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
             'category' => 'nullable|in:service,cleanliness,comfort,value,other',
@@ -198,7 +206,6 @@ class GuestController extends Controller
             Feedback::create([
                 'hotel_id' => $hotelId,
                 'user_id' => $user->id,
-                'reservation_id' => $validated['reservation_id'] ?? null,
                 'guest_name' => $user->name,
                 'guest_email' => $user->email,
                 'rating' => $validated['rating'],
@@ -314,14 +321,12 @@ class GuestController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:1000',
             'priority' => 'nullable|in:low,medium,high,urgent',
-            'reservation_id' => 'nullable|exists:reservations,id',
         ]);
 
         try {
             GuestRequest::create([
                 'hotel_id' => $hotelId,
                 'user_id' => $user->id,
-                'reservation_id' => $validated['reservation_id'] ?? null,
                 'type' => $validated['type'],
                 'title' => $validated['title'],
                 'description' => $validated['description'],

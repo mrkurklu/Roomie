@@ -51,56 +51,14 @@
         <x-ui.card class="border-none shadow-sm">
             <x-ui.card-header class="pb-2 flex items-center justify-between">
                 <x-ui.card-title>Faturalar</x-ui.card-title>
-                <x-ui.button class="gap-2">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    Yeni Fatura
-                </x-ui.button>
             </x-ui.card-header>
             <x-ui.card-content>
-                <x-ui.table>
-                    <x-ui.table-header>
-                        <x-ui.table-row>
-                            <x-ui.table-head>Rezervasyon</x-ui.table-head>
-                            <x-ui.table-head>Misafir</x-ui.table-head>
-                            <x-ui.table-head>Oda</x-ui.table-head>
-                            <x-ui.table-head>Tutar</x-ui.table-head>
-                            <x-ui.table-head>Durum</x-ui.table-head>
-                            <x-ui.table-head></x-ui.table-head>
-                        </x-ui.table-row>
-                    </x-ui.table-header>
-                    <x-ui.table-body>
-                        @forelse($reservations ?? [] as $reservation)
-                        <x-ui.table-row>
-                            <x-ui.table-cell>#{{ str_pad($reservation->id, 6, '0', STR_PAD_LEFT) }}</x-ui.table-cell>
-                            <x-ui.table-cell>{{ $reservation->user->name ?? 'Bilinmeyen' }}</x-ui.table-cell>
-                            <x-ui.table-cell>{{ $reservation->room->room_number ?? 'N/A' }}</x-ui.table-cell>
-                            <x-ui.table-cell>₺{{ number_format($reservation->total_price, 2) }}</x-ui.table-cell>
-                            <x-ui.table-cell>
-                                <x-ui.badge variant="{{ $reservation->status === 'confirmed' ? 'default' : 'outline' }}">
-                                    {{ ucfirst($reservation->status) }}
-                                </x-ui.badge>
-                            </x-ui.table-cell>
-                            <x-ui.table-cell>
-                                <x-ui.button size="sm" variant="outline">Detay</x-ui.button>
-                            </x-ui.table-cell>
-                        </x-ui.table-row>
-                        @empty
-                        <x-ui.table-row>
-                            <x-ui.table-cell colspan="6" class="text-center py-8 text-muted-foreground">
-                                Henüz fatura yok
-                            </x-ui.table-cell>
-                        </x-ui.table-row>
-                        @endforelse
-                    </x-ui.table-body>
-                </x-ui.table>
+                <div class="text-center py-8 text-muted-foreground">
+                    Faturalandırma özelliği yakında eklenecektir.
+                </div>
             </x-ui.card-content>
         </x-ui.card>
     </div>
 </div>
 
-@if(isset($reservations) && $reservations->count() > 15)
-<div class="mt-6">
-    {{ $reservations->links() }}
-</div>
-@endif
 @endsection

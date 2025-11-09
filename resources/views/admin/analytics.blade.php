@@ -7,77 +7,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         const monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
         
-        // Aylık gelir verileri
-        const revenueData = @json($monthlyRevenue ?? []);
-        const revenueLabels = [];
-        const revenueValues = [];
-        
-        for (let i = 1; i <= 12; i++) {
-            revenueLabels.push(monthNames[i - 1]);
-            const monthData = revenueData.find(m => m.month == i);
-            revenueValues.push(monthData ? parseFloat(monthData.revenue) : 0);
-        }
-        
-        // Aylık rezervasyon verileri
-        const reservationData = @json($monthlyReservations ?? []);
-        const reservationValues = [];
-        
-        for (let i = 1; i <= 12; i++) {
-            const monthData = reservationData.find(m => m.month == i);
-            reservationValues.push(monthData ? parseInt(monthData.count) : 0);
-        }
-        
-        // Gelir & Rezervasyon grafiği
-        const revenueCtx = document.getElementById('revenueChart');
-        if (revenueCtx) {
-            new Chart(revenueCtx, {
-                type: 'line',
-                data: {
-                    labels: revenueLabels,
-                    datasets: [{
-                        label: 'Gelir (₺)',
-                        data: revenueValues,
-                        borderColor: 'rgb(59, 130, 246)',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y'
-                    }, {
-                        label: 'Rezervasyon Sayısı',
-                        data: reservationValues,
-                        borderColor: 'rgb(34, 197, 94)',
-                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y1'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            grid: {
-                                drawOnChartArea: false,
-                            },
-                        },
-                    }
-                }
-            });
-        }
         
         // Oda doluluk grafiği
         const occupancyCtx = document.getElementById('occupancyChart');
@@ -174,10 +103,10 @@
     <div class="col-span-12 lg:col-span-8">
         <x-ui.card class="border-none shadow-sm">
             <x-ui.card-header class="pb-2">
-                <x-ui.card-title>Gelir & Rezervasyon Trendi</x-ui.card-title>
+                <x-ui.card-title>Analitik Veriler</x-ui.card-title>
             </x-ui.card-header>
-            <x-ui.card-content class="h-72">
-                <canvas id="revenueChart"></canvas>
+            <x-ui.card-content class="h-72 flex items-center justify-center text-muted-foreground">
+                Analitik grafikler yakında eklenecektir.
             </x-ui.card-content>
         </x-ui.card>
     </div>

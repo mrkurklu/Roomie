@@ -27,20 +27,14 @@
                     </div>
                 </div>
 
-                <!-- Rezervasyon ve Bilgi Kutusu -->
+                <!-- Oda Bilgi Kutusu -->
                 <div class="col-md-4">
                     <div class="sidebar">
                         <div class="booking-box">
-                            <h3>Rezervasyon Yap</h3>
+                            <h3>Oda Bilgileri</h3>
                             <div class="price-tag">
                                 <span>${{ number_format($room->roomType->price_per_night, 0) }}</span> / Gece
                             </div>
-                            <form class="booking-form-widget">
-                                <div class="form-group"><label>Check-in</label><input type="text" class="form-control datepicker" placeholder="Tarih seçin"></div>
-                                <div class="form-group"><label>Check-out</label><input type="text" class="form-control datepicker" placeholder="Tarih seçin"></div>
-                                <div class="form-group"><label>Misafir Sayısı</label><select class="form-control"><option>1</option><option>2</option><option>3</option></select></div>
-                                <button type="submit" class="btn btn-primary btn-block">Rezervasyon İsteği Gönder</button>
-                            </form>
                         </div>
                         <div class="room-features">
                             <h4>Oda Özellikleri</h4>

@@ -5,27 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Request extends Model
+class Event extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'hotel_id', 'user_id', 'guest_name', 'guest_room',
-        'title', 'description', 'category', 'priority', 'status', 'completed_at'
+        'hotel_id', 'title', 'description', 'start_date', 'end_date',
+        'location', 'image_path', 'is_active', 'priority'
     ];
 
     protected $casts = [
-        'completed_at' => 'datetime',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'is_active' => 'boolean',
     ];
 
     public function hotel()
     {
         return $this->belongsTo(Hotel::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
     }
 }
 

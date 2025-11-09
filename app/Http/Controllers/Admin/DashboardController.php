@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Message;
-use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Room;
 use App\Models\Ticket;
 use App\Models\Feedback;
 use App\Models\Request as GuestRequest;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -30,11 +30,7 @@ class DashboardController extends Controller
                 'activeTab' => 'dashboard',
                 'stats' => [],
                 'recentTasks' => collect([]),
-                'recentReservations' => collect([]),
                 'recentMessages' => collect([]),
-                'todayRevenue' => 0,
-                'monthRevenue' => 0,
-                'monthlyReservations' => [],
             ]);
         }
 
@@ -43,9 +39,6 @@ class DashboardController extends Controller
             'total_tasks' => Task::where('hotel_id', $hotelId)->count(),
             'pending_tasks' => Task::where('hotel_id', $hotelId)->where('status', 'pending')->count(),
             'completed_tasks' => Task::where('hotel_id', $hotelId)->where('status', 'completed')->count(),
-            'total_reservations' => Reservation::where('hotel_id', $hotelId)->count(),
-            'pending_reservations' => Reservation::where('hotel_id', $hotelId)->where('status', 'pending')->count(),
-            'confirmed_reservations' => Reservation::where('hotel_id', $hotelId)->where('status', 'confirmed')->count(),
             'total_messages' => Message::where('hotel_id', $hotelId)->count(),
             'unread_messages' => Message::where('hotel_id', $hotelId)->where(function($q) {
                 $q->whereNull('is_read')->orWhere('is_read', false);
@@ -65,13 +58,6 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Son rezervasyonlar
-        $recentReservations = Reservation::where('hotel_id', $hotelId)
-            ->with(['user', 'room.roomType'])
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
-
         // Son mesajlar
         $recentMessages = Message::where('hotel_id', $hotelId)
             ->with(['fromUser', 'toUser'])
@@ -79,39 +65,12 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Bugünkü gelir
-        $todayRevenue = Reservation::where('hotel_id', $hotelId)
-            ->whereDate('created_at', today())
-            ->where('status', 'confirmed')
-            ->sum('total_price');
-
-        // Bu ay gelir
-        $monthRevenue = Reservation::where('hotel_id', $hotelId)
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->where('status', 'confirmed')
-            ->sum('total_price');
-
-        // Aylık rezervasyon grafiği için veri
-        $monthlyReservations = Reservation::where('hotel_id', $hotelId)
-            ->whereYear('created_at', now()->year)
-            ->selectRaw('EXTRACT(MONTH FROM created_at) as month, COUNT(*) as count')
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->pluck('count', 'month')
-            ->toArray();
-
         return view('admin.dashboard', [
             'role' => 'Yönetim',
             'activeTab' => 'dashboard',
             'stats' => $stats,
             'recentTasks' => $recentTasks,
-            'recentReservations' => $recentReservations,
             'recentMessages' => $recentMessages,
-            'todayRevenue' => $todayRevenue,
-            'monthRevenue' => $monthRevenue,
-            'monthlyReservations' => $monthlyReservations,
         ]);
     }
     
@@ -176,7 +135,7 @@ class DashboardController extends Controller
             ->whereHas('roles', function($q) {
                 $q->where('name', 'misafir');
             })
-            ->with(['roles', 'reservations'])
+            ->with(['roles'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -184,15 +143,6 @@ class DashboardController extends Controller
             'total' => User::where('hotel_id', $hotelId)->whereHas('roles', function($q) {
                 $q->where('name', 'misafir');
             })->count(),
-            'active' => User::where('hotel_id', $hotelId)
-                ->whereHas('roles', function($q) {
-                    $q->where('name', 'misafir');
-                })
-                ->whereHas('reservations', function($q) {
-                    $q->where('status', 'confirmed')
-                      ->where('check_out_date', '>=', today());
-                })
-                ->count(),
         ];
 
         return view('admin.guests', [
@@ -203,62 +153,20 @@ class DashboardController extends Controller
         ]);
     }
     
-    public function reservations()
-    {
-        $user = auth()->user();
-        $hotelId = $user->hotel_id;
-
-        $reservations = Reservation::where('hotel_id', $hotelId)
-            ->with(['user', 'room.roomType'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
-        $stats = [
-            'total' => Reservation::where('hotel_id', $hotelId)->count(),
-            'pending' => Reservation::where('hotel_id', $hotelId)->where('status', 'pending')->count(),
-            'confirmed' => Reservation::where('hotel_id', $hotelId)->where('status', 'confirmed')->count(),
-            'cancelled' => Reservation::where('hotel_id', $hotelId)->where('status', 'cancelled')->count(),
-        ];
-
-        return view('admin.reservations', [
-            'role' => 'Yönetim',
-            'activeTab' => 'reservations',
-            'reservations' => $reservations,
-            'stats' => $stats,
-        ]);
-    }
-    
     public function billing()
     {
         $user = auth()->user();
         $hotelId = $user->hotel_id;
 
-        $reservations = Reservation::where('hotel_id', $hotelId)
-            ->where('status', 'confirmed')
-            ->with(['user', 'room.roomType'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
         $stats = [
-            'today_revenue' => Reservation::where('hotel_id', $hotelId)
-                ->whereDate('created_at', today())
-                ->where('status', 'confirmed')
-                ->sum('total_price'),
-            'month_revenue' => Reservation::where('hotel_id', $hotelId)
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->where('status', 'confirmed')
-                ->sum('total_price'),
-            'year_revenue' => Reservation::where('hotel_id', $hotelId)
-                ->whereYear('created_at', now()->year)
-                ->where('status', 'confirmed')
-                ->sum('total_price'),
+            'today_revenue' => 0,
+            'month_revenue' => 0,
+            'year_revenue' => 0,
         ];
 
         return view('admin.billing', [
             'role' => 'Yönetim',
             'activeTab' => 'billing',
-            'reservations' => $reservations,
             'stats' => $stats,
         ]);
     }
@@ -272,20 +180,10 @@ class DashboardController extends Controller
             return view('admin.analytics', [
                 'role' => 'Yönetim',
                 'activeTab' => 'analytics',
-                'monthlyReservations' => collect([]),
                 'roomOccupancy' => ['available' => 0, 'occupied' => 0, 'maintenance' => 0],
                 'taskStatus' => ['pending' => 0, 'in_progress' => 0, 'completed' => 0],
-                'monthlyRevenue' => collect([]),
             ]);
         }
-
-        // Aylık rezervasyon verileri
-        $monthlyReservations = Reservation::where('hotel_id', $hotelId)
-            ->whereYear('created_at', now()->year)
-            ->selectRaw('EXTRACT(MONTH FROM created_at) as month, COUNT(*) as count')
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
 
         // Oda doluluk oranı
         $roomOccupancy = [
@@ -301,22 +199,11 @@ class DashboardController extends Controller
             'completed' => Task::where('hotel_id', $hotelId)->where('status', 'completed')->count(),
         ];
 
-        // Aylık gelir
-        $monthlyRevenue = Reservation::where('hotel_id', $hotelId)
-            ->whereYear('created_at', now()->year)
-            ->where('status', 'confirmed')
-            ->selectRaw('EXTRACT(MONTH FROM created_at) as month, SUM(total_price) as revenue')
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
-
         return view('admin.analytics', [
             'role' => 'Yönetim',
             'activeTab' => 'analytics',
-            'monthlyReservations' => $monthlyReservations,
             'roomOccupancy' => $roomOccupancy,
             'taskStatus' => $taskStatus,
-            'monthlyRevenue' => $monthlyRevenue,
         ]);
     }
     
@@ -466,20 +353,6 @@ class DashboardController extends Controller
         }
     }
 
-    public function updateReservation(Request $request, Reservation $reservation)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled',
-        ]);
-
-        try {
-            $reservation->update($validated);
-            return redirect()->route('admin.reservations')->with('success', 'Rezervasyon başarıyla güncellendi.');
-        } catch (\Exception $e) {
-            return redirect()->route('admin.reservations')->with('error', 'Rezervasyon güncellenirken bir hata oluştu.');
-        }
-    }
-
     public function notifications()
     {
         $user = auth()->user();
@@ -531,24 +404,6 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Yeni rezervasyonlar (pending)
-        $newReservations = Reservation::where('hotel_id', $hotelId)
-            ->where('status', 'pending')
-            ->with(['user', 'room'])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function($reservation) {
-                return [
-                    'type' => 'reservation',
-                    'title' => 'Yeni Rezervasyon: ' . ($reservation->user->name ?? 'Bilinmeyen'),
-                    'description' => 'Oda ' . ($reservation->room->room_number ?? 'N/A') . ' - ' . $reservation->check_in_date->format('d.m.Y'),
-                    'time' => $reservation->created_at,
-                    'icon' => 'calendar',
-                    'color' => 'green',
-                    'data' => $reservation,
-                ];
-            });
-
         // Yeni talepler (pending)
         $newRequests = \App\Models\Request::where('hotel_id', $hotelId)
             ->where('status', 'pending')
@@ -589,7 +444,6 @@ class DashboardController extends Controller
         $notifications = collect()
             ->merge($unreadMessages)
             ->merge($newTasks)
-            ->merge($newReservations)
             ->merge($newRequests)
             ->merge($newTickets)
             ->sortByDesc('time')
@@ -600,5 +454,104 @@ class DashboardController extends Controller
             'activeTab' => 'notifications',
             'notifications' => $notifications,
         ]);
+    }
+
+    public function events()
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        $events = $hotelId ? Event::where('hotel_id', $hotelId)
+            ->orderBy('priority', 'desc')
+            ->orderBy('start_date', 'asc')
+            ->paginate(15) : collect([]);
+
+        return view('admin.events', [
+            'role' => 'Yönetim',
+            'activeTab' => 'events',
+            'events' => $events,
+        ]);
+    }
+
+    public function storeEvent(Request $request)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after:start_date',
+            'location' => 'nullable|string|max:255',
+            'image_path' => 'nullable|string|max:255',
+            'is_active' => 'boolean',
+            'priority' => 'nullable|integer|min:0|max:100',
+        ]);
+
+        try {
+            Event::create([
+                'hotel_id' => $hotelId,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'] ?? null,
+                'location' => $validated['location'] ?? null,
+                'image_path' => $validated['image_path'] ?? null,
+                'is_active' => $validated['is_active'] ?? true,
+                'priority' => $validated['priority'] ?? 0,
+            ]);
+
+            return redirect()->route('admin.events')->with('success', 'Etkinlik başarıyla oluşturuldu.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.events')->with('error', 'Etkinlik oluşturulurken bir hata oluştu.');
+        }
+    }
+
+    public function updateEvent(Request $request, Event $event)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        // Etkinliğin bu otelin etkinliği olduğunu kontrol et
+        if ($event->hotel_id !== $hotelId) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'description' => 'nullable|string',
+            'start_date' => 'sometimes|date',
+            'end_date' => 'nullable|date|after:start_date',
+            'location' => 'nullable|string|max:255',
+            'image_path' => 'nullable|string|max:255',
+            'is_active' => 'boolean',
+            'priority' => 'nullable|integer|min:0|max:100',
+        ]);
+
+        try {
+            $event->update($validated);
+            return redirect()->route('admin.events')->with('success', 'Etkinlik başarıyla güncellendi.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.events')->with('error', 'Etkinlik güncellenirken bir hata oluştu.');
+        }
+    }
+
+    public function deleteEvent(Event $event)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        // Etkinliğin bu otelin etkinliği olduğunu kontrol et
+        if ($event->hotel_id !== $hotelId) {
+            abort(404);
+        }
+
+        try {
+            $event->delete();
+            return redirect()->route('admin.events')->with('success', 'Etkinlik başarıyla silindi.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.events')->with('error', 'Etkinlik silinirken bir hata oluştu.');
+        }
     }
 }

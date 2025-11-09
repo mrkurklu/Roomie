@@ -10,7 +10,6 @@ Modern bir otel yönetim sistemi. Laravel 9, Blade Templates, Tailwind CSS ve Al
 - 📊 **Dashboard**: Gerçek zamanlı istatistikler ve grafikler
 - ✅ **Görev Yönetimi**: Görev oluşturma, atama ve takip
 - 📨 **Mesajlaşma**: İç mesajlaşma sistemi
-- 🎫 **Rezervasyon Yönetimi**: Rezervasyon takibi ve yönetimi
 - 🔔 **Bildirimler**: Gerçek zamanlı bildirim sistemi
 - 🌙 **Dark Mode**: Karanlık/Açık tema desteği
 - 📱 **Responsive Tasarım**: Mobil uyumlu arayüz

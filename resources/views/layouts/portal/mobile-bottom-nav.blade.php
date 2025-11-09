@@ -133,8 +133,8 @@
                         <span class="text-[11px] font-medium text-center">Talep</span>
                     </a>
                     <a href="{{ route('guest.services') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'services' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
-                        <i data-lucide="utensils-crossed" class="w-5 h-5"></i>
-                        <span class="text-[11px] font-medium text-center">Servis</span>
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        <span class="text-[11px] font-medium text-center">Hizmetlerimiz</span>
                     </a>
                     <a href="{{ route('guest.feedback') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'feedback' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
                         <i data-lucide="star" class="w-5 h-5"></i>

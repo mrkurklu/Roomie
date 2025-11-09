@@ -46,18 +46,6 @@
                 <form method="POST" action="{{ route('guest.feedback.store') }}">
                     @csrf
                     <div class="space-y-2">
-                        <label class="text-sm font-medium">Rezervasyon</label>
-                        <select name="reservation_id" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Rezervasyon seçin</option>
-                            @foreach($reservations ?? [] as $reservation)
-                            <option value="{{ $reservation->id }}">
-                                Oda {{ $reservation->room->room_number ?? 'N/A' }} - 
-                                {{ \Carbon\Carbon::parse($reservation->check_in_date)->format('d.m.Y') }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="space-y-2">
                         <label class="text-sm font-medium">Değerlendirme</label>
                         <div class="flex gap-2">
                             @for($i = 1; $i <= 5; $i++)
