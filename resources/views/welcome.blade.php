@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Otel İletişim Portalı - {{ config('app.name', 'Roomie') }}</title>
+    <title>Roomie - Otel İletişim Portalı</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
@@ -14,163 +14,258 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="font-sans antialiased bg-background text-foreground">
+<body class="font-sans antialiased second-color text-foreground">
     <!-- Topbar -->
-    <div class="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <i data-lucide="concierge-bell" class="w-6 h-6"></i>
-                <span class="font-semibold text-lg">Otel İletişim Portalı</span>
-                <span class="hidden sm:inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-secondary text-secondary-foreground">Beta</span>
-            </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ route('login') }}" class="px-4 py-2 rounded-md text-sm font-medium hover:bg-accent transition-colors">
-                    Giriş Yap
-                </a>
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                        Kayıt Ol
-                    </a>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-20">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="text-center space-y-6">
-                <h1 class="text-4xl md:text-6xl font-bold tracking-tight">
-                    Otelimize Hoş Geldiniz
-                </h1>
-                <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
-                    Konforlu konaklama deneyimi için modern iletişim portalımızı keşfedin
-                </p>
-                <div class="flex gap-4 justify-center pt-4">
-                    <a href="{{ route('login') }}" class="px-6 py-3 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+    <header class="sticky top-0 z-50 w-full first-color border-b border-white/10 shadow-lg">
+        <div class="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6 xl:px-8">
+            <div class="flex h-14 sm:h-16 items-center justify-between">
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <i data-lucide="concierge-bell" class="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0"></i>
+                    <span class="font-semibold text-base sm:text-lg lg:text-xl text-white whitespace-nowrap">Roomie</span>
+                    <span class="hidden sm:inline-block ml-2 px-2 py-0.5 text-xs font-medium rounded bg-third-color text-white">Beta</span>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <a href="{{ route('login') }}" class="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium bg-third-color text-white hover:bg-third-color/90 transition-all duration-200 shadow-md hover:shadow-lg">
                         Giriş Yap
                     </a>
-                    <a href="{{ route('rooms.index') }}" class="px-6 py-3 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent transition-colors">
-                        Odaları Görüntüle
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative py-12 sm:py-16 md:py-20 lg:py-24">
+        <div class="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
+            <div class="text-center space-y-6 sm:space-y-8">
+                <div class="flex items-center justify-center">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-first-color/10 flex items-center justify-center">
+                        <i data-lucide="concierge-bell" class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-first-color"></i>
+                    </div>
+                </div>
+                <div class="space-y-3 sm:space-y-4">
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-third-color">
+                        Roomie
+                    </h1>
+                    <p class="text-xl sm:text-2xl md:text-3xl text-gray-700 font-medium">
+                        Modern Otel İletişim Portalı
+                    </p>
+                    <p class="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto pt-2 sm:pt-4 px-4">
+                        Konforlu konaklama deneyiminiz için tasarlanmış, modern ve kullanıcı dostu otel yönetim sistemi. 
+                        Misafirlerinizle iletişim kurun, talepleri yönetin ve hizmet kalitesini artırın.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 sm:pt-6 px-4">
+                    <a href="{{ route('login') }}" class="px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-sm sm:text-base font-semibold bg-first-color text-white hover:bg-first-color/90 transition-all duration-200 shadow-lg hover:shadow-xl inline-flex items-center justify-center gap-2">
+                        Giriş Yap
+                        <i data-lucide="arrow-right" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                     </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Rooms Section -->
-    <section class="py-20">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="text-center space-y-4 mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Favori Odalarımız</h2>
-                <p class="text-lg text-muted-foreground">En popüler odalarımızı keşfedin</p>
+    <!-- About Section -->
+    <section class="py-12 sm:py-16 md:py-20 bg-white">
+        <div class="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
+            <div class="text-center space-y-3 sm:space-y-4 mb-10 sm:mb-12 md:mb-16">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-third-color">Roomie Hakkında</h2>
+                <p class="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+                    Otel yönetimini kolaylaştıran, misafir deneyimini iyileştiren kapsamlı bir platform
+                </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse ($rooms as $room)
-                    <x-ui.card class="border-none shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                        <div class="aspect-video bg-muted relative overflow-hidden">
-                            @if($room->image_path)
-                                <img src="{{ asset($room->image_path) }}" alt="{{ $room->roomType->name }}" class="w-full h-full object-cover">
-                            @else
-                                <div class="w-full h-full flex items-center justify-center">
-                                    <i data-lucide="hotel" class="w-16 h-16 text-muted-foreground"></i>
-                                </div>
-                            @endif
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 md:gap-12 items-start">
+                <div class="space-y-6">
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="users" class="w-6 h-6 text-primary"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-third-color mb-2">Çoklu Rol Sistemi</h3>
+                                <p class="text-muted-foreground">
+                                    Yönetim, Personel ve Misafir panelleri ile herkes için özelleştirilmiş deneyim. 
+                                    Her rol için uygun yetkiler ve özellikler.
+                                </p>
+                            </div>
                         </div>
-                        <x-ui.card-content class="p-6">
-                            <div class="flex items-start justify-between mb-4">
-                                <div>
-                                    <h3 class="text-xl font-semibold mb-1">{{ $room->roomType->name }}</h3>
-                                    <p class="text-sm text-muted-foreground">Oda {{ $room->room_number }}</p>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-2xl font-bold">₺{{ number_format($room->roomType->price_per_night, 0) }}</div>
-                                    <div class="text-xs text-muted-foreground">/ Gece</div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="users" class="w-4 h-4"></i>
-                                    <span>{{ $room->roomType->capacity }} Kişi</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="bed" class="w-4 h-4"></i>
-                                    <span>{{ $room->roomType->bed_type ?? 'Standart' }}</span>
-                                </div>
-                            </div>
-
-                            <a href="{{ route('rooms.show', $room->id) }}" class="w-full">
-                                <x-ui.button class="w-full gap-2">
-                                    Detayları Görüntüle
-                                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                                </x-ui.button>
-                            </a>
-                        </x-ui.card-content>
-                    </x-ui.card>
-                @empty
-                    <div class="col-span-full text-center py-12">
-                        <i data-lucide="hotel" class="w-16 h-16 text-muted-foreground mx-auto mb-4"></i>
-                        <p class="text-lg text-muted-foreground">Gösterilecek oda bulunamadı.</p>
                     </div>
-                @endforelse
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="message-square" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-third-color mb-2">Çok Dilli Chat Sistemi</h3>
+                            <p class="text-muted-foreground">
+                                Otomatik çeviri ile misafir-personel iletişimi. 30+ dil desteği ile 
+                                dünya çapında misafirlerinizle sorunsuz iletişim kurun.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="clipboard-list" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-third-color mb-2">Görev Yönetimi</h3>
+                            <p class="text-muted-foreground">
+                                Görev oluşturma, atama ve takip sistemi. Personel verimliliğini artırın 
+                                ve iş akışını optimize edin.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="calendar" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-third-color mb-2">Etkinlik Yönetimi</h3>
+                            <p class="text-muted-foreground">
+                                Otel etkinliklerini oluşturun, yönetin ve misafirlerinize duyurun. 
+                                Etkinlik detaylarını kolayca paylaşın.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="trending-up" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-third-color mb-2">Dashboard & Analitik</h3>
+                            <p class="text-muted-foreground">
+                                Gerçek zamanlı istatistikler ve grafikler. Otel performansını izleyin 
+                                ve veriye dayalı kararlar alın.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="bell" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-third-color mb-2">Bildirim Sistemi</h3>
+                            <p class="text-muted-foreground">
+                                Gerçek zamanlı bildirimler ile önemli güncellemelerden haberdar olun. 
+                                Anında bildirimler ve hatırlatmalar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="moon" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-third-color mb-2">Dark Mode</h3>
+                            <p class="text-muted-foreground">
+                                Karanlık/Açık tema desteği. Göz yormayan, modern bir arayüz deneyimi.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="smartphone" class="w-6 h-6 text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-third-color mb-2">Responsive Tasarım</h3>
+                            <p class="text-muted-foreground">
+                                Mobil uyumlu arayüz. Her cihazda mükemmel görünüm ve kullanım deneyimi.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section class="py-20 bg-muted/50">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="text-center space-y-4 mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Otel İmkânları</h2>
-                <p class="text-lg text-muted-foreground">Konforunuz için sunduğumuz hizmetler</p>
+    <section class="py-12 sm:py-16 md:py-20 bg-second-color">
+        <div class="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
+            <div class="text-center space-y-3 sm:space-y-4 mb-10 sm:mb-12 md:mb-16">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-third-color">Özellikler</h2>
+                <p class="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+                    Roomie ile otel yönetimini kolaylaştıran özellikler
+                </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <x-ui.card class="border-none shadow-sm text-center">
-                    <x-ui.card-content class="p-6">
-                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                            <i data-lucide="wifi" class="w-6 h-6 text-primary"></i>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                <x-ui.card class="border-none shadow-lg text-center hover:shadow-xl transition-shadow">
+                    <x-ui.card-content class="p-8">
+                        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="wifi" class="w-8 h-8 text-primary"></i>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2">Ücretsiz Wi-Fi</h3>
-                        <p class="text-sm text-muted-foreground">Tüm alanlarda yüksek hızlı internet erişimi</p>
+                        <h3 class="text-xl font-semibold text-third-color mb-3">Ücretsiz Wi-Fi</h3>
+                        <p class="text-muted-foreground">
+                            Tüm alanlarda yüksek hızlı internet erişimi
+                        </p>
                     </x-ui.card-content>
                 </x-ui.card>
 
-                <x-ui.card class="border-none shadow-sm text-center">
-                    <x-ui.card-content class="p-6">
-                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                            <i data-lucide="concierge-bell" class="w-6 h-6 text-primary"></i>
+                <x-ui.card class="border-none shadow-lg text-center hover:shadow-xl transition-shadow">
+                    <x-ui.card-content class="p-8">
+                        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="concierge-bell" class="w-8 h-8 text-primary"></i>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2">7/24 Concierge</h3>
-                        <p class="text-sm text-muted-foreground">Her zaman yanınızda olan destek ekibimiz</p>
+                        <h3 class="text-xl font-semibold text-third-color mb-3">7/24 Concierge</h3>
+                        <p class="text-muted-foreground">
+                            Her zaman yanınızda olan destek ekibimiz
+                        </p>
                     </x-ui.card-content>
                 </x-ui.card>
 
-                <x-ui.card class="border-none shadow-sm text-center">
-                    <x-ui.card-content class="p-6">
-                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                            <i data-lucide="utensils-crossed" class="w-6 h-6 text-primary"></i>
+                <x-ui.card class="border-none shadow-lg text-center hover:shadow-xl transition-shadow">
+                    <x-ui.card-content class="p-8">
+                        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="utensils-crossed" class="w-8 h-8 text-primary"></i>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2">Restoran & Oda Servisi</h3>
-                        <p class="text-sm text-muted-foreground">Lezzetli yemekler ve oda servisi</p>
+                        <h3 class="text-xl font-semibold text-third-color mb-3">Restoran & Oda Servisi</h3>
+                        <p class="text-muted-foreground">
+                            Lezzetli yemekler ve oda servisi
+                        </p>
                     </x-ui.card-content>
                 </x-ui.card>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="border-t py-12">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="text-center space-y-4">
-                <div class="flex items-center justify-center gap-3">
-                    <i data-lucide="concierge-bell" class="w-6 h-6"></i>
-                    <span class="font-semibold text-lg">Otel İletişim Portalı</span>
+    <!-- CTA Section -->
+    <section class="py-12 sm:py-16 md:py-20 first-color">
+        <div class="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
+            <div class="text-center space-y-6 sm:space-y-8">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white">
+                    Hemen Başlayın
+                </h2>
+                <p class="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto px-4">
+                    Roomie ile otel yönetimini modernize edin ve misafir deneyimini iyileştirin
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 px-4">
+                    <a href="{{ route('login') }}" class="px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-sm sm:text-base font-semibold bg-third-color text-white hover:bg-third-color/90 transition-all duration-200 shadow-lg hover:shadow-xl inline-flex items-center justify-center gap-2">
+                        Giriş Yap
+                        <i data-lucide="arrow-right" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                    </a>
                 </div>
-                <p class="text-sm text-muted-foreground">
-                    © {{ date('Y') }} {{ config('app.name', 'Roomie') }}. Tüm hakları saklıdır.
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 py-8 sm:py-10 md:py-12 first-color">
+        <div class="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
+            <div class="text-center space-y-3 sm:space-y-4">
+                <div class="flex items-center justify-center gap-2 sm:gap-3 text-white">
+                    <i data-lucide="concierge-bell" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+                    <span class="font-semibold text-base sm:text-lg">Roomie</span>
+                </div>
+                <p class="text-xs sm:text-sm text-white/80">
+                    © {{ date('Y') }} Roomie. Tüm hakları saklıdır.
                 </p>
             </div>
         </div>

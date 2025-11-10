@@ -18,43 +18,44 @@
 
 @section('content')
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <x-ui.card class="border-none shadow-sm">
+    <x-ui.card class="border-2 border-white/20 shadow-sm">
         <x-ui.card-content class="pt-6">
-            <div class="text-2xl font-semibold">{{ $stats['total'] ?? 0 }}</div>
-            <div class="text-sm text-muted-foreground mt-1">Toplam Talep</div>
+            <div class="text-2xl font-semibold text-white">{{ $stats['total'] ?? 0 }}</div>
+            <div class="text-sm text-white/70 mt-1">Toplam Talep</div>
         </x-ui.card-content>
     </x-ui.card>
-    <x-ui.card class="border-none shadow-sm">
+    <x-ui.card class="border-2 border-white/20 shadow-sm">
         <x-ui.card-content class="pt-6">
-            <div class="text-2xl font-semibold text-yellow-600">{{ $stats['pending'] ?? 0 }}</div>
-            <div class="text-sm text-muted-foreground mt-1">Bekleyen</div>
+            <div class="text-2xl font-semibold text-third-color">{{ $stats['pending'] ?? 0 }}</div>
+            <div class="text-sm text-white/70 mt-1">Bekleyen</div>
         </x-ui.card-content>
     </x-ui.card>
-    <x-ui.card class="border-none shadow-sm">
+    <x-ui.card class="border-2 border-white/20 shadow-sm">
         <x-ui.card-content class="pt-6">
-            <div class="text-2xl font-semibold text-blue-600">{{ $stats['in_progress'] ?? 0 }}</div>
-            <div class="text-sm text-muted-foreground mt-1">İşlemde</div>
+            <div class="text-2xl font-semibold text-white">{{ $stats['in_progress'] ?? 0 }}</div>
+            <div class="text-sm text-white/70 mt-1">İşlemde</div>
         </x-ui.card-content>
     </x-ui.card>
-    <x-ui.card class="border-none shadow-sm">
+    <x-ui.card class="border-2 border-white/20 shadow-sm">
         <x-ui.card-content class="pt-6">
-            <div class="text-2xl font-semibold text-green-600">{{ $stats['completed'] ?? 0 }}</div>
-            <div class="text-sm text-muted-foreground mt-1">Tamamlanan</div>
+            <div class="text-2xl font-semibold text-white">{{ $stats['completed'] ?? 0 }}</div>
+            <div class="text-sm text-white/70 mt-1">Tamamlanan</div>
         </x-ui.card-content>
     </x-ui.card>
 </div>
 
-<x-ui.card class="border-none shadow-sm">
+<x-ui.card class="border-2 border-white/20 shadow-sm">
     <x-ui.card-header class="pb-2 flex items-center justify-between">
-        <x-ui.card-title>Taleplerim</x-ui.card-title>
-        <x-ui.button 
+        <x-ui.card-title class="text-white">Taleplerim</x-ui.card-title>
+        <button 
+            type="button"
             x-data="{ open: false }"
             @click="open = !open"
-            class="gap-2"
+            class="flex items-center justify-center gap-2 px-4 py-2 rounded-md third-color hover:bg-third-color/90 dark:hover:bg-yellow-600 transition-all duration-300 shadow-sm hover:shadow-xl hover:scale-105 hover:-translate-y-1 active:scale-100 text-first-color dark:text-blue-400 font-medium"
         >
             <i data-lucide="plus" class="w-4 h-4"></i>
             Yeni Talep
-        </x-ui.button>
+        </button>
     </x-ui.card-header>
     <x-ui.card-content>
         @if(session('success'))
@@ -63,7 +64,7 @@
             </div>
         @endif
         @if(session('error'))
-            <div class="p-3 rounded-md bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm mb-4">
+            <div class="p-3 rounded-md bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 text-sm mb-4">
                 {{ session('error') }}
             </div>
         @endif
@@ -72,14 +73,14 @@
             x-show="open"
             x-cloak
             x-transition
-            class="mb-6 p-4 border rounded-lg"
+            class="mb-6 p-4 border border-white/20 rounded-lg bg-white/10"
         >
             <form method="POST" action="{{ route('guest.requests.store') }}" class="space-y-4">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="text-sm font-medium">Talep Türü</label>
-                        <select name="type" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required>
+                        <label class="text-sm font-medium text-white">Talep Türü</label>
+                        <select name="type" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-first-color dark:text-blue-400" required>
                             <option value="room_service">Oda Servisi</option>
                             <option value="housekeeping">Temizlik</option>
                             <option value="maintenance">Bakım</option>
@@ -88,8 +89,8 @@
                         </select>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-sm font-medium">Öncelik</label>
-                        <select name="priority" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                        <label class="text-sm font-medium text-white">Öncelik</label>
+                        <select name="priority" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-first-color dark:text-blue-400">
                             <option value="low">Düşük</option>
                             <option value="medium" selected>Orta</option>
                             <option value="high">Yüksek</option>
@@ -98,55 +99,60 @@
                     </div>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-sm font-medium">Başlık</label>
-                    <x-ui.input name="title" placeholder="Talep başlığı" required />
+                    <label class="text-sm font-medium text-white">Başlık</label>
+                    <x-ui.input name="title" placeholder="Talep başlığı" required class="text-first-color dark:text-blue-400" />
                 </div>
                 <div class="space-y-2">
-                    <label class="text-sm font-medium">Açıklama</label>
-                    <textarea name="description" rows="4" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Talep açıklaması" required></textarea>
+                    <label class="text-sm font-medium text-white">Açıklama</label>
+                    <textarea name="description" rows="4" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-first-color dark:text-blue-400" placeholder="Talep açıklaması" required></textarea>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <x-ui.button type="button" variant="outline" @click="open = false">İptal</x-ui.button>
-                    <x-ui.button type="submit">Gönder</x-ui.button>
+                    <button type="button" @click="open = false" class="px-4 py-2 rounded-md second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 text-first-color dark:text-blue-400 font-medium border-2 border-transparent">
+                        İptal
+                    </button>
+                    <button type="submit" class="flex items-center justify-center gap-2 px-4 py-2 rounded-md third-color hover:bg-third-color/90 dark:hover:bg-yellow-600 transition-all duration-300 shadow-sm hover:shadow-xl hover:scale-105 hover:-translate-y-1 active:scale-100 text-first-color dark:text-blue-400 font-medium">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        Gönder
+                    </button>
                 </div>
             </form>
         </div>
         <x-ui.table>
             <x-ui.table-header>
                 <x-ui.table-row>
-                    <x-ui.table-head>Oda</x-ui.table-head>
-                    <x-ui.table-head>Tür</x-ui.table-head>
-                    <x-ui.table-head>Başlık</x-ui.table-head>
-                    <x-ui.table-head>Öncelik</x-ui.table-head>
-                    <x-ui.table-head>Durum</x-ui.table-head>
-                    <x-ui.table-head>Tarih</x-ui.table-head>
+                    <x-ui.table-head class="text-white">Oda</x-ui.table-head>
+                    <x-ui.table-head class="text-white">Tür</x-ui.table-head>
+                    <x-ui.table-head class="text-white">Başlık</x-ui.table-head>
+                    <x-ui.table-head class="text-white">Öncelik</x-ui.table-head>
+                    <x-ui.table-head class="text-white">Durum</x-ui.table-head>
+                    <x-ui.table-head class="text-white">Tarih</x-ui.table-head>
                 </x-ui.table-row>
             </x-ui.table-header>
             <x-ui.table-body>
                 @forelse($requests ?? [] as $request)
                 <x-ui.table-row>
-                    <x-ui.table-cell>{{ $request->guest_room ?? 'N/A' }}</x-ui.table-cell>
-                    <x-ui.table-cell>
-                        <x-ui.badge variant="outline">{{ ucfirst(str_replace('_', ' ', $request->category)) }}</x-ui.badge>
+                    <x-ui.table-cell class="text-white">{{ $request->guest_room ?? 'N/A' }}</x-ui.table-cell>
+                    <x-ui.table-cell class="text-white">
+                        <x-ui.badge variant="outline" class="text-white border-white/30">{{ ucfirst(str_replace('_', ' ', $request->category)) }}</x-ui.badge>
                     </x-ui.table-cell>
-                    <x-ui.table-cell class="font-medium">{{ Str::limit($request->title, 40) }}</x-ui.table-cell>
-                    <x-ui.table-cell>
+                    <x-ui.table-cell class="font-medium text-white">{{ Str::limit($request->title, 40) }}</x-ui.table-cell>
+                    <x-ui.table-cell class="text-white">
                         <x-ui.badge variant="{{ $request->priority === 'urgent' ? 'destructive' : ($request->priority === 'high' ? 'default' : 'secondary') }}">
                             {{ ucfirst($request->priority) }}
                         </x-ui.badge>
                     </x-ui.table-cell>
-                    <x-ui.table-cell>
+                    <x-ui.table-cell class="text-white">
                         <x-ui.badge variant="{{ $request->status === 'completed' ? 'default' : ($request->status === 'in_progress' ? 'secondary' : 'outline') }}">
                             {{ ucfirst(str_replace('_', ' ', $request->status)) }}
                         </x-ui.badge>
                     </x-ui.table-cell>
-                    <x-ui.table-cell class="text-sm text-muted-foreground">
+                    <x-ui.table-cell class="text-sm text-white">
                         {{ $request->created_at->format('d.m.Y H:i') }}
                     </x-ui.table-cell>
                 </x-ui.table-row>
                 @empty
                 <x-ui.table-row>
-                    <x-ui.table-cell colspan="6" class="text-center py-8 text-muted-foreground">
+                    <x-ui.table-cell colspan="6" class="text-center py-8 text-white">
                         Henüz talep yok
                     </x-ui.table-cell>
                 </x-ui.table-row>

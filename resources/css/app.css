@@ -4,48 +4,55 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* 4. renk - Sayfa arka planı */
+    --background: 45 40% 75%; /* #e0d09d */
+    --foreground: 210 30% 20%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 30% 20%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --popover-foreground: 210 30% 20%;
+    /* 1. renk - Header ve başlıklar */
+    --primary: 210 30% 20%;
+    --primary-foreground: 0 0% 100%;
+    /* 2. renk - Butonlar */
+    --secondary: 210 30% 37%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 210 30% 20%;
+    --accent: 200 100% 95%;
+    --accent-foreground: 210 30% 20%;
+    --button-hover: 200 80% 85%;
+    /* 3. renk - Sidebar menü butonu */
+    --destructive: 45 100% 50%; /* #FFBF00 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 85%;
+    --input: 0 0% 95%;
+    --ring: 210 30% 20%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Dark mode - first-color (#111f4d) temelli profesyonel tasarım */
+    --background: 222 47% 11%; /* first-color'dan esinlenen koyu mavi */
+    --foreground: 210 40% 95%; /* Açık gri-beyaz text */
+    --card: 222 47% 18%; /* first-color'dan biraz daha açık */
+    --card-foreground: 210 40% 95%;
+    --popover: 222 47% 18%;
+    --popover-foreground: 210 40% 95%;
+    --primary: 217 91% 60%; /* first-color'dan esinlenen parlak mavi */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 28% 35%; /* first-color tonları */
+    --secondary-foreground: 210 40% 95%;
+    --muted: 222 47% 25%; /* first-color tonları */
+    --muted-foreground: 215 20% 70%; /* Açık gri */
+    --accent: 222 47% 25%; /* first-color tonları */
+    --accent-foreground: 210 40% 95%;
+    --button-hover: 222 47% 30%; /* first-color tonları */
+    --destructive: 45 100% 60%; /* #FFBF00 daha parlak ton */
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 47% 30%; /* first-color tonları - görünür border */
+    --input: 222 47% 20%; /* first-color tonları */
+    --ring: 217 91% 60%; /* primary ile aynı */
   }
 }
 
@@ -55,6 +62,123 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .first-color {
+    background: #111f4d !important;
+  }
+  
+  .dark .first-color {
+    background: #1e3a8a !important; /* first-color'dan esinlenen daha parlak mavi */
+  }
+  
+  .text-first-color {
+    color: #111f4d !important;
+  }
+  
+  .dark .text-first-color {
+    color: #60a5fa !important; /* blue-400 - first-color'dan esinlenen */
+  }
+  
+  .second-color {
+    background: #e0d09d !important;
+  }
+  
+  .dark .second-color {
+    background: #0f172a !important; /* first-color'dan esinlenen koyu mavi background */
+  }
+  
+  .text-second-color {
+    color: #f2f4f7 !important;
+  }
+  
+  .dark .text-second-color {
+    color: #e2e8f0 !important; /* Açık gri-beyaz */
+  }
+  
+  .third-color {
+    background: #FFBF00 !important;
+  }
+  
+  .dark .third-color {
+    background: #FFD700 !important; /* #FFBF00'dan esinlenen parlak sarı */
+  }
+  
+  .text-third-color {
+    color: #FFBF00 !important;
+  }
+  
+  .dark .text-third-color {
+    color: #FFD700 !important; /* #FFBF00'dan esinlenen parlak sarı */
+  }
+  
+  .fourth-color {
+    background: #020205 !important;
+  }
+  
+  .dark .fourth-color {
+    background: #1e293b !important; /* first-color tonları */
+  }
+  
+  .text-fourth-color {
+    color: #020205 !important;
+  }
+  
+  .dark .text-fourth-color {
+    color: #e2e8f0 !important; /* Açık gri-beyaz */
+  }
+  
+  .from-third-color {
+    --tw-gradient-from: #FFBF00 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(255 191 0 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .dark .from-third-color {
+    --tw-gradient-from: #FFD700 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgb(255 215 0 / 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .to-third-color\/80 {
+    --tw-gradient-to: rgb(255 191 0 / 0.8) var(--tw-gradient-to-position);
+  }
+  
+  .dark .to-third-color\/80 {
+    --tw-gradient-to: rgb(255 215 0 / 0.8) var(--tw-gradient-to-position);
+  }
+  
+  .shadow-third-color\/30 {
+    --tw-shadow-color: rgb(255 191 0 / 0.3);
+    --tw-shadow: var(--tw-shadow-colored);
+  }
+  
+  .dark .shadow-third-color\/30 {
+    --tw-shadow-color: rgb(255 215 0 / 0.3);
+    --tw-shadow: var(--tw-shadow-colored);
+  }
+  
+  /* Dark mode icon colors - first-color temelli */
+  .dark [data-lucide] {
+    color: rgb(96 165 250) !important; /* blue-400 - first-color'dan esinlenen */
+  }
+  
+  .dark [data-lucide].text-primary {
+    color: rgb(96 165 250) !important; /* blue-400 */
+  }
+  
+  .dark [data-lucide].text-third-color {
+    color: rgb(255 215 0) !important; /* #FFD700 - third-color'dan esinlenen */
+  }
+  
+  .dark [data-lucide].text-muted-foreground {
+    color: rgb(203 213 225) !important; /* slate-300 */
+  }
+  
+  .dark [data-lucide].text-white {
+    color: rgb(255 255 255) !important;
   }
 }
 

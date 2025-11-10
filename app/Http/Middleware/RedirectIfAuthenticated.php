@@ -23,7 +23,19 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect(RouteServiceProvider::HOME);
+                $user = Auth::guard($guard)->user()->load('roles');
+                
+                // Role göre yönlendirme
+                if ($user->hasRole('superadmin') || $user->hasRole('müdür') || $user->hasRole('manager')) {
+                    return redirect()->route('admin.dashboard');
+                } elseif ($user->hasRole('personel') || $user->hasRole('staff')) {
+                    return redirect()->route('staff.tasks');
+                } elseif ($user->hasRole('misafir') || $user->hasRole('guest')) {
+                    return redirect()->route('guest.welcome');
+                }
+                
+                // Varsayılan olarak admin dashboard'a yönlendir
+                return redirect()->route('admin.dashboard');
             }
         }
 

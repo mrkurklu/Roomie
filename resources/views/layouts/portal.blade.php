@@ -17,16 +17,18 @@
     @stack('scripts')
 </head>
 <body class="font-sans antialiased">
-    <div class="min-h-screen bg-background text-foreground pb-24 md:pb-6">
+    <div class="min-h-screen second-color text-foreground pb-24 md:pb-6">
         @include('layouts.portal.topbar', ['role' => $role ?? 'Yönetim'])
         
-        <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
-            <div class="mx-auto max-w-[1920px] flex gap-6">
-                <aside class="hidden md:block w-64 flex-shrink-0 space-y-4">
+        <div class="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+            <div class="mx-auto max-w-[1920px] flex flex-col md:flex-row gap-4 md:gap-6">
+                @if(($role ?? 'Yönetim') !== 'Misafir')
+                <aside class="hidden md:block w-full md:w-64 lg:w-72 flex-shrink-0 space-y-4">
                     @yield('sidebar')
                 </aside>
-                <main class="flex-1 min-w-0 flex justify-center">
-                    <div class="w-full max-w-6xl">
+                @endif
+                <main class="flex-1 min-w-0 w-full">
+                    <div class="w-full max-w-7xl mx-auto">
                         @yield('content')
                     </div>
                 </main>

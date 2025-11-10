@@ -38,7 +38,7 @@
     </x-ui.card>
     <x-ui.card class="border-none shadow-sm">
         <x-ui.card-content class="pt-6">
-            <div class="text-2xl font-semibold text-red-600">{{ $stats['out_of_stock'] ?? 0 }}</div>
+            <div class="text-2xl font-semibold text-yellow-600">{{ $stats['out_of_stock'] ?? 0 }}</div>
             <div class="text-sm text-muted-foreground mt-1">Stokta Yok</div>
         </x-ui.card-content>
     </x-ui.card>

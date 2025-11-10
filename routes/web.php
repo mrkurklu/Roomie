@@ -24,7 +24,6 @@ Route::get('/about-us', [PageController::class, 'about'])->name('about');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 
 // --- KULLANICI GİRİŞİ SONRASI ROTALAR ---
-Route::get('/dashboard', function () { return view('dashboard'); })->middleware(['auth', 'verified'])->name('dashboard');
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -82,5 +81,6 @@ Route::prefix('guest')->middleware(['auth'])->group(function () {
     Route::get('/amenities', [GuestController::class, 'amenities'])->name('guest.amenities');
     Route::get('/feedback', [GuestController::class, 'feedback'])->name('guest.feedback');
     Route::post('/feedback', [GuestController::class, 'storeFeedback'])->name('guest.feedback.store');
+    Route::get('/notifications', [GuestController::class, 'notifications'])->name('guest.notifications');
 });
 

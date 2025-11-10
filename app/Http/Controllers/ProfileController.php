@@ -44,43 +44,19 @@ class ProfileController extends Controller
         // Mevcut değerleri sakla (değişiklik kontrolü için)
         $oldName = $user->name;
         $oldEmail = $user->email;
-        $oldLanguage = $user->language;
         
         // Form verilerini doldur
         $user->fill($request->validated());
-        
-        // Dil ayarını güncelle
-        if ($request->has('language')) {
-            $newLocale = $request->input('language');
-            $user->language = $newLocale;
-            // Session'a kaydet (middleware için)
-            session(['locale' => $newLocale]);
-            // Locale'i hemen güncelle (bu sayfa için)
-            App::setLocale($newLocale);
-        }
 
         // Gerçek değişiklikleri kontrol et
         $nameChanged = $oldName !== $user->name;
         $emailChanged = $oldEmail !== $user->email;
-        $languageChanged = $oldLanguage !== $user->language;
 
         if ($emailChanged) {
             $user->email_verified_at = null;
         }
 
         $user->save();
-
-        // Eğer sadece dil değiştiyse, dashboard'a yönlendir (ayarlar sayfasını kapat)
-        if ($languageChanged && !$nameChanged && !$emailChanged) {
-            // Kullanıcının rolüne göre dashboard'a yönlendir
-            if ($user->hasRole('superadmin') || $user->hasRole('müdür')) {
-                return Redirect::route('admin.dashboard')->with('status', 'profile-updated');
-            } elseif ($user->hasRole('personel')) {
-                return Redirect::route('staff.tasks')->with('status', 'profile-updated');
-            } elseif ($user->hasRole('misafir')) {
-                return Redirect::route('guest.welcome')->with('status', 'profile-updated');
-            }
-        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

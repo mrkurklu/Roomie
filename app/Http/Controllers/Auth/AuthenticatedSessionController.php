@@ -31,16 +31,30 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user()->load('roles');
         
+        // Tarayıcı dilini al ve kullanıcının language field'ını güncelle (eğer boşsa veya farklıysa)
+        $browserLanguage = $request->input('browser_language', 'tr');
+        
+        // Desteklenen dilleri kontrol et
+        $supportedLanguages = ['tr', 'en', 'de', 'fr', 'es', 'it', 'ru', 'ar', 'zh', 'ja'];
+        if (in_array($browserLanguage, $supportedLanguages)) {
+            // Kullanıcının language field'ı boşsa veya farklıysa güncelle
+            if (empty($user->language) || $user->language !== $browserLanguage) {
+                $user->language = $browserLanguage;
+                $user->save();
+            }
+        }
+        
         // Role göre yönlendirme
-        if ($user->hasRole('superadmin') || $user->hasRole('müdür')) {
-            return redirect()->intended(route('admin.dashboard'));
-        } elseif ($user->hasRole('personel')) {
-            return redirect()->intended(route('staff.tasks'));
-        } elseif ($user->hasRole('misafir')) {
-            return redirect()->intended(route('guest.welcome'));
+        if ($user->hasRole('superadmin') || $user->hasRole('müdür') || $user->hasRole('manager')) {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->hasRole('personel') || $user->hasRole('staff')) {
+            return redirect()->route('staff.tasks');
+        } elseif ($user->hasRole('misafir') || $user->hasRole('guest')) {
+            return redirect()->route('guest.welcome');
         }
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        // Varsayılan olarak admin dashboard'a yönlendir
+        return redirect()->route('admin.dashboard');
     }
 
     /**

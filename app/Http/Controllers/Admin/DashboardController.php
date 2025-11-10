@@ -322,12 +322,43 @@ class DashboardController extends Controller
         ]);
 
         try {
+            // Kullanıcının dil ayarını al (önce tarayıcı dilini kontrol et, sonra kullanıcının language field'ı)
+            $browserLanguage = $request->input('browser_language');
+            $userLanguage = $user->language ?? $browserLanguage ?? 'tr';
+            
+            // Desteklenen dilleri kontrol et
+            $supportedLanguages = ['tr', 'en', 'de', 'fr', 'es', 'it', 'ru', 'ar', 'zh', 'ja'];
+            if (!in_array($userLanguage, $supportedLanguages)) {
+                $userLanguage = 'tr';
+            }
+            
+            // Eğer kullanıcının language field'ı boşsa ve tarayıcı dili varsa, güncelle
+            if (empty($user->language) && $browserLanguage && in_array($browserLanguage, $supportedLanguages)) {
+                $user->language = $browserLanguage;
+                $user->save();
+                $userLanguage = $browserLanguage;
+            }
+            
+            $toUser = \App\Models\User::find($validated['to_user_id']);
+            $toUserLanguage = $toUser->language ?? 'tr';
+            
+            // Mesajın dilini tespit et
+            $detectedLanguage = \App\Services\TranslationService::detectLanguage($validated['content']);
+            
+            // Alıcının diline çevir
+            $translatedContent = $toUserLanguage !== $detectedLanguage 
+                ? \App\Services\TranslationService::translate($validated['content'], $toUserLanguage, $detectedLanguage)
+                : $validated['content'];
+
             Message::create([
                 'hotel_id' => $hotelId,
                 'from_user_id' => $user->id,
                 'to_user_id' => $validated['to_user_id'],
                 'subject' => $validated['subject'] ?? null,
-                'content' => $validated['content'],
+                'content' => $translatedContent,
+                'original_content' => $validated['content'],
+                'original_language' => $detectedLanguage,
+                'translated_content' => $translatedContent,
                 'type' => $validated['type'] ?? 'internal',
                 'priority' => $validated['priority'] ?? 'medium',
                 'is_read' => false,

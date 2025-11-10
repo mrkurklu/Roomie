@@ -4,7 +4,7 @@
     <button 
         @click="menuOpen = !menuOpen"
         type="button"
-        style="width: 3.5rem; height: 3.5rem; border-radius: 9999px; background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: center; transition: all 0.3s; border: none; cursor: pointer; padding: 0; position: relative;"
+        style="width: 3.5rem; height: 3.5rem; border-radius: 9999px; background-color: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: center; transition: all 0.3s; border: none; cursor: pointer; padding: 0; position: relative;"
         onmouseover="this.style.opacity='0.9'"
         onmouseout="this.style.opacity='1'"
         onmousedown="this.style.transform='scale(0.95)'"
@@ -78,65 +78,65 @@
                 x-transition:enter-end="opacity-100 translate-y-0"
             >
                 @if(($role ?? 'Yönetim') === 'Yönetim')
-                    <a href="{{ route('admin.dashboard') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'dashboard' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
+                    <a href="{{ route('admin.dashboard') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'dashboard' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
                         <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Özet</span>
                     </a>
-                    <a href="{{ route('admin.tasks') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'tasks' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
+                    <a href="{{ route('admin.tasks') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'tasks' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
                         <i data-lucide="clipboard-list" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Görev</span>
                     </a>
-                    <a href="{{ route('admin.messages') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'messages' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
+                    <a href="{{ route('admin.messages') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'messages' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
                         <i data-lucide="message-square" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Mesaj</span>
                     </a>
-                    <a href="{{ route('admin.reservations') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'reservations' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
+                    <a href="{{ route('admin.events') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'events' ? 'bg-destructive text-destructive-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
                         <i data-lucide="calendar" class="w-5 h-5"></i>
-                        <span class="text-[11px] font-medium text-center">Rez</span>
+                        <span class="text-[11px] font-medium text-center">Etkinlik</span>
                     </a>
-                    <a href="{{ route('admin.analytics') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'analytics' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
+                    <a href="{{ route('admin.analytics') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'dashboard') === 'analytics' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
                         <i data-lucide="trending-up" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Analiz</span>
                     </a>
                 @elseif(($role ?? 'Yönetim') === 'Personel')
-                    <a href="{{ route('staff.tasks') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'mytasks' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
+                    <a href="{{ route('staff.tasks') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'mytasks' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
                         <i data-lucide="clipboard-list" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Görev</span>
                     </a>
-                    <a href="{{ route('staff.schedule') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'schedule' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
+                    <a href="{{ route('staff.schedule') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'schedule' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
                         <i data-lucide="calendar" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Vardiya</span>
                     </a>
-                    <a href="{{ route('staff.tickets') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'tickets' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
+                    <a href="{{ route('staff.tickets') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'tickets' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
                         <i data-lucide="wrench" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Arıza</span>
                     </a>
-                    <a href="{{ route('staff.inbox') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'inbox' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
+                    <a href="{{ route('staff.inbox') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'inbox' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
                         <i data-lucide="inbox" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Mesaj</span>
                     </a>
-                    <a href="{{ route('staff.resources') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'resources' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
+                    <a href="{{ route('staff.resources') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-[hsl(var(--button-hover))] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'mytasks') === 'resources' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
                         <i data-lucide="utensils-crossed" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Kaynak</span>
                     </a>
                 @else
-                    <a href="{{ route('guest.welcome') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'welcome' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
+                    <a href="{{ route('guest.welcome') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'welcome' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
                         <i data-lucide="hotel" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Ana</span>
                     </a>
-                    <a href="{{ route('guest.chat') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'chat' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
+                    <a href="{{ route('guest.chat') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'chat' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
                         <i data-lucide="message-square" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Sohbet</span>
                     </a>
-                    <a href="{{ route('guest.requests') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'requests' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
+                    <a href="{{ route('guest.requests') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'requests' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
                         <i data-lucide="concierge-bell" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Talep</span>
                     </a>
-                    <a href="{{ route('guest.services') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'services' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
+                    <a href="{{ route('guest.services') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'services' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
                         <i data-lucide="sparkles" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Hizmetlerimiz</span>
                     </a>
-                    <a href="{{ route('guest.feedback') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-accent transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'feedback' ? 'bg-primary text-primary-foreground' : '' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
+                    <a href="{{ route('guest.feedback') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'feedback' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
                         <i data-lucide="star" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Puan</span>
                     </a>

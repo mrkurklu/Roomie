@@ -236,8 +236,22 @@ class GuestController extends Controller
         ]);
 
         try {
-            // Kullanıcının dil ayarını al
-            $userLanguage = $user->language ?? 'tr';
+            // Kullanıcının dil ayarını al (önce tarayıcı dilini kontrol et, sonra kullanıcının language field'ı)
+            $browserLanguage = $request->input('browser_language');
+            $userLanguage = $user->language ?? $browserLanguage ?? 'tr';
+            
+            // Desteklenen dilleri kontrol et
+            $supportedLanguages = ['tr', 'en', 'de', 'fr', 'es', 'it', 'ru', 'ar', 'zh', 'ja'];
+            if (!in_array($userLanguage, $supportedLanguages)) {
+                $userLanguage = 'tr';
+            }
+            
+            // Eğer kullanıcının language field'ı boşsa ve tarayıcı dili varsa, güncelle
+            if (empty($user->language) && $browserLanguage && in_array($browserLanguage, $supportedLanguages)) {
+                $user->language = $browserLanguage;
+                $user->save();
+                $userLanguage = $browserLanguage;
+            }
             
             // Mesajın dilini tespit et
             $detectedLanguage = \App\Services\TranslationService::detectLanguage($validated['content']);
@@ -338,5 +352,99 @@ class GuestController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('guest.requests')->with('error', 'Talep gönderilirken bir hata oluştu.');
         }
+    }
+
+    public function notifications()
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        if (!$hotelId) {
+            return view('guest.notifications', [
+                'role' => 'Misafir',
+                'activeTab' => 'notifications',
+                'notifications' => collect([]),
+            ]);
+        }
+
+        // Mesajlar (okunmamış)
+        $unreadMessages = Message::where('hotel_id', $hotelId)
+            ->where(function($q) use ($user) {
+                $q->where('from_user_id', $user->id)
+                  ->orWhere('to_user_id', $user->id);
+            })
+            ->where(function($q) {
+                $q->whereNull('is_read')->orWhere('is_read', false);
+            })
+            ->where('type', 'guest')
+            ->with(['fromUser', 'toUser'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($message) use ($user) {
+                $isFromMe = $message->from_user_id === $user->id;
+                return [
+                    'type' => 'message',
+                    'title' => $isFromMe ? 'Mesajınız gönderildi' : ($message->fromUser->name ?? 'Personel'),
+                    'description' => \Illuminate\Support\Str::limit($message->content, 100),
+                    'time' => $message->created_at,
+                    'icon' => 'message-square',
+                    'color' => 'blue',
+                    'data' => $message,
+                ];
+            });
+
+        // Talepler (durum değişiklikleri)
+        $requests = GuestRequest::where('hotel_id', $hotelId)
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['in_progress', 'completed'])
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function($request) {
+                $statusText = [
+                    'in_progress' => 'Talebiniz işleme alındı',
+                    'completed' => 'Talebiniz tamamlandı',
+                ];
+                return [
+                    'type' => 'request',
+                    'title' => $statusText[$request->status] ?? 'Talep durumu güncellendi',
+                    'description' => \Illuminate\Support\Str::limit($request->title . ': ' . ($request->description ?? ''), 100),
+                    'time' => $request->updated_at,
+                    'icon' => 'concierge-bell',
+                    'color' => $request->status === 'completed' ? 'green' : 'orange',
+                    'data' => $request,
+                ];
+            });
+
+        // Yeni etkinlikler
+        $newEvents = Event::where('hotel_id', $hotelId)
+            ->where('is_active', true)
+            ->where('created_at', '>=', now()->subDays(7))
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($event) {
+                return [
+                    'type' => 'event',
+                    'title' => 'Yeni Etkinlik: ' . $event->title,
+                    'description' => \Illuminate\Support\Str::limit($event->description ?? 'Açıklama yok', 100),
+                    'time' => $event->created_at,
+                    'icon' => 'calendar',
+                    'color' => 'purple',
+                    'data' => $event,
+                ];
+            });
+
+        // Tüm bildirimleri birleştir ve tarihe göre sırala
+        $notifications = collect()
+            ->merge($unreadMessages)
+            ->merge($requests)
+            ->merge($newEvents)
+            ->sortByDesc('time')
+            ->values();
+
+        return view('guest.notifications', [
+            'role' => 'Misafir',
+            'activeTab' => 'notifications',
+            'notifications' => $notifications,
+        ]);
     }
 }

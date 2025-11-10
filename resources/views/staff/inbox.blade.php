@@ -8,6 +8,20 @@
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
+
+        // Tarayıcı dilini algıla ve form'a ekle
+        const browserLanguage = navigator.language || navigator.userLanguage || 'tr';
+        // Örnek: "de-DE" -> "de", "en-US" -> "en"
+        const langCode = browserLanguage.split('-')[0].toLowerCase();
+        
+        // Desteklenen dilleri kontrol et (tr, en, de, fr, es, it, ru, ar, zh, ja)
+        const supportedLanguages = ['tr', 'en', 'de', 'fr', 'es', 'it', 'ru', 'ar', 'zh', 'ja'];
+        const finalLangCode = supportedLanguages.includes(langCode) ? langCode : 'tr';
+        
+        const browserLangInput = document.getElementById('browser_language');
+        if (browserLangInput) {
+            browserLangInput.value = finalLangCode;
+        }
     });
 </script>
 @endpush
@@ -95,12 +109,14 @@
             </div>
         @endif
         @if(session('error'))
-            <div class="p-3 rounded-md bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm mb-4">
+            <div class="p-3 rounded-md bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 text-sm mb-4">
                 {{ session('error') }}
             </div>
         @endif
-        <form method="POST" action="{{ route('staff.inbox.store') }}" class="flex gap-2">
+        <form method="POST" action="{{ route('staff.inbox.store') }}" id="inbox-form" class="flex gap-2">
             @csrf
+            <!-- Browser Language (Hidden) -->
+            <input type="hidden" name="browser_language" id="browser_language" value="">
             <input type="hidden" name="to_user_id" value="{{ isset($messages) && $messages->count() > 0 ? $messages->first()->from_user_id : '' }}" />
             <x-ui.input name="content" placeholder="Yanıt yazın..." class="flex-1" required />
             <x-ui.button type="submit" class="gap-2">

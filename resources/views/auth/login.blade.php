@@ -69,8 +69,11 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                        <form method="POST" action="{{ route('login') }}" id="login-form" class="space-y-4">
                             @csrf
+
+                            <!-- Browser Language (Hidden) -->
+                            <input type="hidden" name="browser_language" id="browser_language" value="">
 
                             <!-- Email Address -->
                             <div class="space-y-2">
@@ -162,6 +165,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
+            }
+
+            // Tarayıcı dilini algıla ve form'a ekle
+            const browserLanguage = navigator.language || navigator.userLanguage || 'tr';
+            // Örnek: "de-DE" -> "de", "en-US" -> "en"
+            const langCode = browserLanguage.split('-')[0].toLowerCase();
+            
+            // Desteklenen dilleri kontrol et (tr, en, de, fr, es, it, ru, ar, zh, ja)
+            const supportedLanguages = ['tr', 'en', 'de', 'fr', 'es', 'it', 'ru', 'ar', 'zh', 'ja'];
+            const finalLangCode = supportedLanguages.includes(langCode) ? langCode : 'tr';
+            
+            const browserLangInput = document.getElementById('browser_language');
+            if (browserLangInput) {
+                browserLangInput.value = finalLangCode;
             }
         });
     </script>

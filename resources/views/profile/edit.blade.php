@@ -46,40 +46,25 @@
                     @enderror
                 </div>
 
-                <div class="space-y-2">
-                    <label for="language" class="text-sm font-medium">{{ __('language_preference') }}</label>
-                    <select id="language" name="language" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" onchange="document.getElementById('language-form').submit();">
-                        @foreach(\App\Services\TranslationService::getSupportedLanguages() as $code => $name)
-                            <option value="{{ $code }}" {{ old('language', $user->language ?? 'tr') === $code ? 'selected' : '' }}>
-                                {{ $name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <p class="text-xs text-muted-foreground mt-1">{{ __('language_description') }}</p>
-                    @error('language')
-                        <p class="text-sm text-destructive">{{ $message }}</p>
-                    @enderror
+                @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
+                    <div class="space-y-2">
+                        <p class="text-sm text-muted-foreground">
+                            E-posta adresiniz doğrulanmamış.
+                            <form id="send-verification" method="post" action="{{ route('verification.send') }}" class="inline">
+                                @csrf
+                                <button type="submit" class="underline text-sm text-primary hover:text-primary/80">
+                                    Doğrulama e-postasını tekrar gönder
+                                </button>
+                            </form>
+                        </p>
 
-                    @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                        <div class="mt-2">
-                            <p class="text-sm text-muted-foreground">
-                                E-posta adresiniz doğrulanmamış.
-                                <form id="send-verification" method="post" action="{{ route('verification.send') }}" class="inline">
-                                    @csrf
-                                    <button type="submit" class="underline text-sm text-primary hover:text-primary/80">
-                                        Doğrulama e-postasını tekrar gönder
-                                    </button>
-                                </form>
+                        @if (session('status') === 'verification-link-sent')
+                            <p class="mt-2 text-sm text-green-600 dark:text-green-400">
+                                Yeni bir doğrulama bağlantısı e-posta adresinize gönderildi.
                             </p>
-
-                            @if (session('status') === 'verification-link-sent')
-                                <p class="mt-2 text-sm text-green-600 dark:text-green-400">
-                                    Yeni bir doğrulama bağlantısı e-posta adresinize gönderildi.
-                                </p>
-                            @endif
-                        </div>
-                    @endif
-                </div>
+                        @endif
+                    </div>
+                @endif
 
                 <div class="flex items-center gap-4">
                     <x-ui.button type="submit">{{ __('save') }}</x-ui.button>

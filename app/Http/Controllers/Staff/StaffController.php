@@ -259,7 +259,23 @@ class StaffController extends Controller
         ]);
 
         try {
-            $userLanguage = $user->language ?? 'tr';
+            // Kullanıcının dil ayarını al (önce tarayıcı dilini kontrol et, sonra kullanıcının language field'ı)
+            $browserLanguage = $request->input('browser_language');
+            $userLanguage = $user->language ?? $browserLanguage ?? 'tr';
+            
+            // Desteklenen dilleri kontrol et
+            $supportedLanguages = ['tr', 'en', 'de', 'fr', 'es', 'it', 'ru', 'ar', 'zh', 'ja'];
+            if (!in_array($userLanguage, $supportedLanguages)) {
+                $userLanguage = 'tr';
+            }
+            
+            // Eğer kullanıcının language field'ı boşsa ve tarayıcı dili varsa, güncelle
+            if (empty($user->language) && $browserLanguage && in_array($browserLanguage, $supportedLanguages)) {
+                $user->language = $browserLanguage;
+                $user->save();
+                $userLanguage = $browserLanguage;
+            }
+            
             $toUser = \App\Models\User::find($validated['to_user_id']);
             $toUserLanguage = $toUser->language ?? 'tr';
             

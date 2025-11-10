@@ -32,7 +32,7 @@
                         'orange' => 'bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400',
                         'green' => 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400',
                         'purple' => 'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-                        'red' => 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400',
+                        'red' => 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400',
                     ];
                     $colorClass = $colorClasses[$notification['color']] ?? 'bg-secondary text-secondary-foreground';
                 @endphp
