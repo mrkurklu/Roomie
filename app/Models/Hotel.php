@@ -69,4 +69,9 @@ class Hotel extends Model
     {
         return $this->hasMany(Event::class);
     }
+
+    public function guestStays()
+    {
+        return $this->hasMany(GuestStay::class);
+    }
 }

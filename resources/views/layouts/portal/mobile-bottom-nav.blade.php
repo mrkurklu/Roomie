@@ -4,7 +4,7 @@
     <button 
         @click="menuOpen = !menuOpen"
         type="button"
-        style="width: 3.5rem; height: 3.5rem; border-radius: 9999px; background-color: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: center; transition: all 0.3s; border: none; cursor: pointer; padding: 0; position: relative;"
+        style="width: 3.5rem; height: 3.5rem; border-radius: 9999px; background-color: #0092ca; color: #eeeeee; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: center; transition: all 0.3s; border: none; cursor: pointer; padding: 0; position: relative;"
         onmouseover="this.style.opacity='0.9'"
         onmouseout="this.style.opacity='1'"
         onmousedown="this.style.transform='scale(0.95)'"
@@ -20,7 +20,7 @@
             stroke-width="2.5" 
             stroke-linecap="round" 
             stroke-linejoin="round"
-            style="width: 24px; height: 24px; color: hsl(var(--primary-foreground)); display: block;"
+            style="width: 24px; height: 24px; color: #eeeeee; display: block;"
             :style="menuOpen ? 'transform: rotate(45deg);' : 'transform: rotate(0deg);'"
             style="transition: transform 0.3s;"
         >
@@ -120,23 +120,23 @@
                         <span class="text-[11px] font-medium text-center">Kaynak</span>
                     </a>
                 @else
-                    <a href="{{ route('guest.welcome') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'welcome' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
+                    <a href="{{ route('guest.welcome') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'welcome' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
                         <i data-lucide="hotel" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Ana</span>
                     </a>
-                    <a href="{{ route('guest.chat') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'chat' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
+                    <a href="{{ route('guest.chat') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'chat' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
                         <i data-lucide="message-square" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Sohbet</span>
                     </a>
-                    <a href="{{ route('guest.requests') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'requests' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
+                    <a href="{{ route('guest.requests') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'requests' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
                         <i data-lucide="concierge-bell" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Talep</span>
                     </a>
-                    <a href="{{ route('guest.services') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'services' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
+                    <a href="{{ route('guest.services') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'services' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
                         <i data-lucide="sparkles" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Hizmetlerimiz</span>
                     </a>
-                    <a href="{{ route('guest.feedback') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl second-color hover:bg-[#d4c18a] transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'feedback' ? 'third-color text-first-color dark:text-blue-400' : 'text-first-color dark:text-blue-400' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
+                    <a href="{{ route('guest.feedback') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'feedback' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
                         <i data-lucide="star" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Puan</span>
                     </a>

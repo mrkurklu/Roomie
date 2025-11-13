@@ -9,6 +9,9 @@ use App\Models\Ticket;
 use App\Models\Schedule;
 use App\Models\Resource;
 use App\Models\Event;
+use App\Models\GuestStay;
+use App\Models\User;
+use App\Models\Room;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -129,7 +132,7 @@ class StaffController extends Controller
         ]);
     }
     
-    public function inbox()
+    public function inbox(Request $request)
     {
         $user = auth()->user();
         $hotelId = $user->hotel_id;
@@ -144,19 +147,50 @@ class StaffController extends Controller
             ]);
         }
 
-        $messages = Message::where('hotel_id', $hotelId)
-            ->where(function($query) use ($user) {
-                $query->where('from_user_id', $user->id)
-                      ->orWhere('to_user_id', $user->id);
-            })
-            ->with(['fromUser', 'toUser'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        // Belirli bir kullanıcıyla chat thread'i için to_user_id parametresi
+        $toUserId = $request->get('to_user_id');
+        
+        if ($toUserId) {
+            // Belirli bir kullanıcıyla olan mesajları getir
+            $messages = Message::where('hotel_id', $hotelId)
+                ->where(function($query) use ($user, $toUserId) {
+                    $query->where(function($q) use ($user, $toUserId) {
+                        $q->where('sender_id', $user->id)
+                          ->where('to_user_id', $toUserId);
+                    })->orWhere(function($q) use ($user, $toUserId) {
+                        $q->where('sender_id', $toUserId)
+                          ->where('to_user_id', $user->id);
+                    });
+                })
+                ->with(['fromUser', 'toUser'])
+                ->orderBy('created_at', 'asc')
+                ->get();
+        } else {
+            // Tüm mesajları getir (en son mesajlaşan kullanıcıları göster)
+            $messages = Message::where('hotel_id', $hotelId)
+                ->where(function($query) use ($user) {
+                    $query->where('sender_id', $user->id)
+                          ->orWhere('to_user_id', $user->id);
+                })
+                ->with(['fromUser', 'toUser'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->unique(function($message) use ($user) {
+                    $senderId = $message->attributes['sender_id'] ?? $message->from_user_id;
+                    if ($senderId == $user->id) {
+                        return $message->to_user_id;
+                    } else {
+                        return $senderId;
+                    }
+                })
+                ->take(20);
+        }
 
         // Mesajları kullanıcının diline göre çevir
-        $messages->getCollection()->transform(function($message) use ($userLanguage, $user) {
-            // Eğer mesaj kullanıcıdan geliyorsa, orijinal içeriği göster
-            if ($message->from_user_id === $user->id) {
+        $messages = $messages->transform(function($message) use ($userLanguage, $user) {
+            // sender_id'yi kontrol ediyoruz çünkü veritabanında bu kolon var
+            $senderId = $message->attributes['sender_id'] ?? $message->from_user_id;
+            if ($senderId == $user->id) {
                 $message->display_content = $message->original_content ?? $message->content;
             } else {
                 // Eğer mesaj kullanıcıya geliyorsa, kullanıcının diline çevrilmiş içeriği göster
@@ -181,11 +215,41 @@ class StaffController extends Controller
             })
             ->count();
 
+        // Chat thread için kullanıcı bilgisi
+        $chatUser = $toUserId ? \App\Models\User::find($toUserId) : null;
+
+        // Mesajlaşma geçmişi olan kullanıcıları getir (kullanıcı seçimi için)
+        $chatUsers = collect();
+        if (!$toUserId) {
+            $chatUsers = Message::where('hotel_id', $hotelId)
+                ->where(function($query) use ($user) {
+                    $query->where('sender_id', $user->id)
+                          ->orWhere('to_user_id', $user->id);
+                })
+                ->with(['fromUser', 'toUser'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($message) use ($user) {
+                    $senderId = $message->attributes['sender_id'] ?? $message->from_user_id;
+                    if ($senderId == $user->id) {
+                        return $message->toUser;
+                    } else {
+                        return $message->fromUser;
+                    }
+                })
+                ->filter()
+                ->unique('id')
+                ->take(10);
+        }
+
         return view('staff.inbox', [
             'role' => 'Personel',
             'activeTab' => 'inbox',
             'messages' => $messages,
             'unreadCount' => $unreadCount,
+            'chatUser' => $chatUser,
+            'toUserId' => $toUserId,
+            'chatUsers' => $chatUsers,
         ]);
     }
     
@@ -277,6 +341,11 @@ class StaffController extends Controller
             }
             
             $toUser = \App\Models\User::find($validated['to_user_id']);
+            
+            if (!$toUser) {
+                return redirect()->route('staff.inbox')->with('error', 'Alıcı kullanıcı bulunamadı.');
+            }
+            
             $toUserLanguage = $toUser->language ?? 'tr';
             
             // Mesajın dilini tespit et
@@ -287,6 +356,12 @@ class StaffController extends Controller
                 ? \App\Services\TranslationService::translate($validated['content'], $toUserLanguage, $detectedLanguage)
                 : $validated['content'];
 
+            // type değerini kontrol et ve geçerli değerlerden biri olduğundan emin ol
+            $messageType = $validated['type'] ?? 'internal';
+            if (!in_array($messageType, ['internal', 'guest', 'system'])) {
+                $messageType = 'internal';
+            }
+
             Message::create([
                 'hotel_id' => $hotelId,
                 'from_user_id' => $user->id,
@@ -296,14 +371,19 @@ class StaffController extends Controller
                 'original_content' => $validated['content'],
                 'original_language' => $detectedLanguage,
                 'translated_content' => $translatedContent,
-                'type' => $validated['type'] ?? 'internal',
+                'type' => $messageType,
                 'priority' => $validated['priority'] ?? 'medium',
                 'is_read' => false,
             ]);
 
-            return redirect()->route('staff.inbox')->with('success', 'Mesaj başarıyla gönderildi.');
+            return redirect()->route('staff.inbox', ['to_user_id' => $validated['to_user_id']])->with('success', 'Mesaj başarıyla gönderildi.');
         } catch (\Exception $e) {
-            return redirect()->route('staff.inbox')->with('error', 'Mesaj gönderilirken bir hata oluştu.');
+            \Log::error('Mesaj gönderme hatası (Staff): ' . $e->getMessage(), [
+                'exception' => $e,
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
+            return redirect()->route('staff.inbox')->with('error', 'Mesaj gönderilirken bir hata oluştu: ' . $e->getMessage());
         }
     }
 
@@ -403,6 +483,105 @@ class StaffController extends Controller
             return redirect()->route('staff.events')->with('success', 'Etkinlik başarıyla silindi.');
         } catch (\Exception $e) {
             return redirect()->route('staff.events')->with('error', 'Etkinlik silinirken bir hata oluştu.');
+        }
+    }
+
+    public function checkIn(Request $request)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'room_id' => 'required|exists:rooms,id',
+            'check_in' => 'required|date',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            // Oda müsait mi kontrol et
+            $room = Room::findOrFail($validated['room_id']);
+            if ($room->hotel_id != $hotelId) {
+                return redirect()->back()->with('error', 'Bu oda bu otele ait değil.');
+            }
+
+            // Misafirin aktif bir rezervasyonu var mı kontrol et
+            $activeStay = GuestStay::where('user_id', $validated['user_id'])
+                ->where('status', 'checked_in')
+                ->first();
+
+            if ($activeStay) {
+                return redirect()->back()->with('error', 'Bu misafirin zaten aktif bir rezervasyonu var.');
+            }
+
+            // Oda dolu mu kontrol et
+            $roomOccupied = GuestStay::where('room_id', $validated['room_id'])
+                ->where('status', 'checked_in')
+                ->exists();
+
+            if ($roomOccupied) {
+                return redirect()->back()->with('error', 'Bu oda şu anda dolu.');
+            }
+
+            // Check-in oluştur
+            $guestStay = GuestStay::create([
+                'hotel_id' => $hotelId,
+                'user_id' => $validated['user_id'],
+                'room_id' => $validated['room_id'],
+                'check_in' => $validated['check_in'],
+                'status' => 'checked_in',
+                'notes' => $validated['notes'] ?? null,
+                'checked_in_by' => $user->id,
+            ]);
+
+            // Oda durumunu güncelle
+            $room->status = 'occupied';
+            $room->save();
+
+            return redirect()->back()->with('success', 'Check-in başarıyla yapıldı.');
+        } catch (\Exception $e) {
+            \Log::error('Check-in hatası: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Check-in yapılırken bir hata oluştu: ' . $e->getMessage());
+        }
+    }
+
+    public function checkOut(Request $request, GuestStay $guestStay)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        $validated = $request->validate([
+            'check_out' => 'required|date',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            if ($guestStay->hotel_id != $hotelId) {
+                return redirect()->back()->with('error', 'Bu rezervasyon bu otele ait değil.');
+            }
+
+            if ($guestStay->status == 'checked_out') {
+                return redirect()->back()->with('error', 'Bu rezervasyon zaten check-out yapılmış.');
+            }
+
+            // Check-out yap
+            $guestStay->check_out = $validated['check_out'];
+            $guestStay->status = 'checked_out';
+            $guestStay->checked_out_by = $user->id;
+            if ($validated['notes']) {
+                $guestStay->notes = ($guestStay->notes ? $guestStay->notes . "\n" : '') . $validated['notes'];
+            }
+            $guestStay->save();
+
+            // Oda durumunu güncelle
+            $room = $guestStay->room;
+            $room->status = 'available';
+            $room->save();
+
+            return redirect()->back()->with('success', 'Check-out başarıyla yapıldı.');
+        } catch (\Exception $e) {
+            \Log::error('Check-out hatası: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Check-out yapılırken bir hata oluştu: ' . $e->getMessage());
         }
     }
 }

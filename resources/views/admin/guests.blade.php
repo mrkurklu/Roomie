@@ -8,6 +8,43 @@
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
+
+        // Check-in modal açma
+        document.querySelectorAll('[data-checkin]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                const userName = this.getAttribute('data-user-name');
+                document.getElementById('checkin_user_id').value = userId;
+                document.getElementById('checkin_user_name').textContent = userName;
+                document.getElementById('checkin_modal').classList.remove('hidden');
+            });
+        });
+
+        // Check-out modal açma
+        document.querySelectorAll('[data-checkout]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const stayId = this.getAttribute('data-stay-id');
+                const userName = this.getAttribute('data-user-name');
+                const roomNumber = this.getAttribute('data-room-number');
+                document.getElementById('checkout_stay_id').value = stayId;
+                document.getElementById('checkout_user_name').textContent = userName;
+                document.getElementById('checkout_room_number').textContent = roomNumber;
+                document.getElementById('checkout_modal').classList.remove('hidden');
+            });
+        });
+
+        // Misafir ekleme modal açma
+        document.getElementById('create_guest_btn')?.addEventListener('click', function() {
+            document.getElementById('create_guest_modal').classList.remove('hidden');
+        });
+
+        // Modal kapatma
+        document.querySelectorAll('[data-close-modal]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modalId = this.getAttribute('data-close-modal');
+                document.getElementById(modalId).classList.add('hidden');
+            });
+        });
     });
 </script>
 @endpush
@@ -17,6 +54,18 @@
 @endsection
 
 @section('content')
+@if(session('success'))
+<div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+    <p class="text-green-800 dark:text-green-200">{{ session('success') }}</p>
+</div>
+@endif
+
+@if(session('error'))
+<div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+    <p class="text-red-800 dark:text-red-200">{{ session('error') }}</p>
+</div>
+@endif
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
     <x-ui.card class="border-none shadow-sm">
         <x-ui.card-content class="pt-6">
@@ -35,20 +84,10 @@
 <x-ui.card class="border-none shadow-sm">
     <x-ui.card-header class="pb-2 flex items-center justify-between">
         <x-ui.card-title>Misafir Listesi</x-ui.card-title>
-        <div class="flex gap-2">
-            <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"></i>
-                <x-ui.input placeholder="İsim veya oda ara" class="pl-9 w-64" />
-            </div>
-            <x-ui.button variant="outline" class="gap-2">
-                <i data-lucide="filter" class="w-4 h-4"></i>
-                Filtre
-            </x-ui.button>
-            <x-ui.button class="gap-2">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                Yeni Misafir
-            </x-ui.button>
-        </div>
+        <x-ui.button id="create_guest_btn" class="gap-2">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+            Yeni Misafir Ekle
+        </x-ui.button>
     </x-ui.card-header>
     <x-ui.card-content>
         <x-ui.table>
@@ -56,7 +95,8 @@
                 <x-ui.table-row>
                     <x-ui.table-head>İsim</x-ui.table-head>
                     <x-ui.table-head>E-posta</x-ui.table-head>
-                    <x-ui.table-head>Rezervasyon</x-ui.table-head>
+                    <x-ui.table-head>Oda</x-ui.table-head>
+                    <x-ui.table-head>Check-in</x-ui.table-head>
                     <x-ui.table-head>Durum</x-ui.table-head>
                     <x-ui.table-head>Aksiyon</x-ui.table-head>
                 </x-ui.table-row>
@@ -64,37 +104,70 @@
             <x-ui.table-body>
                 @forelse($guests ?? [] as $guest)
                 @php
-                    $activeReservation = $guest->reservations->where('status', 'confirmed')
-                        ->where('check_out_date', '>=', today())
-                        ->first();
+                    $activeStay = $guest->activeGuestStay;
                 @endphp
                 <x-ui.table-row>
                     <x-ui.table-cell>{{ $guest->name }}</x-ui.table-cell>
                     <x-ui.table-cell>{{ $guest->email }}</x-ui.table-cell>
                     <x-ui.table-cell>
-                        @if($activeReservation)
-                            Oda {{ $activeReservation->room->room_number ?? 'N/A' }}
+                        @if($activeStay && $activeStay->room)
+                            <span class="font-medium">Oda {{ $activeStay->room->room_number }}</span>
+                            @if($activeStay->room->assignedStaff)
+                                <div class="text-xs text-muted-foreground mt-1">
+                                    Personel: {{ $activeStay->room->assignedStaff->name }}
+                                </div>
+                            @endif
                         @else
-                            <span class="text-muted-foreground">Yok</span>
+                            <span class="text-muted-foreground">-</span>
                         @endif
                     </x-ui.table-cell>
                     <x-ui.table-cell>
-                        @if($activeReservation)
-                            <x-ui.badge>Konaklıyor</x-ui.badge>
+                        @if($activeStay)
+                            {{ \Carbon\Carbon::parse($activeStay->check_in)->format('d.m.Y H:i') }}
+                        @else
+                            <span class="text-muted-foreground">-</span>
+                        @endif
+                    </x-ui.table-cell>
+                    <x-ui.table-cell>
+                        @if($activeStay)
+                            <x-ui.badge class="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Konaklıyor</x-ui.badge>
                         @else
                             <x-ui.badge variant="outline">Pasif</x-ui.badge>
                         @endif
                     </x-ui.table-cell>
                     <x-ui.table-cell>
                         <div class="flex gap-2">
-                            <x-ui.button size="sm" variant="secondary">Detay</x-ui.button>
-                            <x-ui.button size="sm" variant="outline">Mesaj</x-ui.button>
+                            @if($activeStay)
+                                <x-ui.button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    data-checkout
+                                    data-stay-id="{{ $activeStay->id }}"
+                                    data-user-name="{{ $guest->name }}"
+                                    data-room-number="{{ $activeStay->room->room_number ?? 'N/A' }}"
+                                    class="text-orange-600 hover:text-orange-700">
+                                    Check-out
+                                </x-ui.button>
+                            @else
+                                <x-ui.button 
+                                    size="sm" 
+                                    class="gap-2"
+                                    data-checkin
+                                    data-user-id="{{ $guest->id }}"
+                                    data-user-name="{{ $guest->name }}">
+                                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                                    Check-in
+                                </x-ui.button>
+                            @endif
+                            <a href="{{ route('admin.messages', ['to_user_id' => $guest->id]) }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors h-8 px-3 py-1 bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                                Mesaj
+                            </a>
                         </div>
                     </x-ui.table-cell>
                 </x-ui.table-row>
                 @empty
                 <x-ui.table-row>
-                    <x-ui.table-cell colspan="5" class="text-center py-8 text-muted-foreground">
+                    <x-ui.table-cell colspan="6" class="text-center py-8 text-muted-foreground">
                         Henüz misafir yok
                     </x-ui.table-cell>
                 </x-ui.table-row>
@@ -104,9 +177,182 @@
     </x-ui.card-content>
 </x-ui.card>
 
-@if(isset($guests) && $guests->count() > 15)
+@if(isset($guests) && $guests->hasPages())
 <div class="mt-6">
     {{ $guests->links() }}
 </div>
 @endif
+
+<!-- Check-in Modal -->
+<div id="checkin_modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-surface-dark rounded-lg p-6 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold">Check-in Yap</h3>
+            <button data-close-modal="checkin_modal" class="text-muted-foreground hover:text-foreground">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <form action="{{ route('admin.guests.checkin') }}" method="POST">
+            @csrf
+            <input type="hidden" id="checkin_user_id" name="user_id" required>
+            
+            <div class="mb-4">
+                <p class="text-sm text-muted-foreground mb-2">Misafir: <span id="checkin_user_name" class="font-medium text-foreground"></span></p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Oda Seçin</label>
+                <select name="room_id" required class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">Oda seçin...</option>
+                    @foreach($rooms ?? [] as $room)
+                        <option value="{{ $room->id }}">
+                            Oda {{ $room->room_number }} 
+                            @if($room->roomType)
+                                - {{ $room->roomType->name }}
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Check-in Tarihi</label>
+                <input type="datetime-local" name="check_in" value="{{ now()->format('Y-m-d\TH:i') }}" required class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Notlar (Opsiyonel)</label>
+                <textarea name="notes" rows="3" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"></textarea>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+                <x-ui.button type="button" variant="outline" data-close-modal="checkin_modal">İptal</x-ui.button>
+                <x-ui.button type="submit">Check-in Yap</x-ui.button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Check-out Modal -->
+<div id="checkout_modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-surface-dark rounded-lg p-6 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold">Check-out Yap</h3>
+            <button data-close-modal="checkout_modal" class="text-muted-foreground hover:text-foreground">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <form action="" method="POST" id="checkout_form">
+            @csrf
+            
+            <div class="mb-4">
+                <p class="text-sm text-muted-foreground mb-1">Misafir: <span id="checkout_user_name" class="font-medium text-foreground"></span></p>
+                <p class="text-sm text-muted-foreground">Oda: <span id="checkout_room_number" class="font-medium text-foreground"></span></p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Check-out Tarihi</label>
+                <input type="datetime-local" name="check_out" value="{{ now()->format('Y-m-d\TH:i') }}" required class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Notlar (Opsiyonel)</label>
+                <textarea name="notes" rows="3" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"></textarea>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+                <x-ui.button type="button" variant="outline" data-close-modal="checkout_modal">İptal</x-ui.button>
+                <x-ui.button type="submit">Check-out Yap</x-ui.button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Misafir Ekleme Modal -->
+<div id="create_guest_modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-surface-dark rounded-lg p-6 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold">Yeni Misafir Ekle</h3>
+            <button data-close-modal="create_guest_modal" class="text-muted-foreground hover:text-foreground">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <form action="{{ route('admin.guests.create') }}" method="POST">
+            @csrf
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">İsim *</label>
+                <input type="text" name="name" required maxlength="255" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Misafir adı soyadı">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">E-posta *</label>
+                <input type="email" name="email" required class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="misafir@example.com">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">TC Kimlik No *</label>
+                <input type="text" name="tc_no" required maxlength="11" minlength="11" pattern="[0-9]{11}" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="11 haneli TC numarası">
+                <p class="text-xs text-muted-foreground mt-1">TC numarası şifre olarak kullanılacaktır.</p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Oda *</label>
+                <select name="room_id" required class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="">Oda seçin</option>
+                    @foreach($rooms ?? [] as $room)
+                        @if($room->status === 'available' || $room->status === 'occupied')
+                            <option value="{{ $room->id }}">
+                                Oda {{ $room->room_number }}
+                                @if($room->roomType)
+                                    - {{ $room->roomType->name }}
+                                @endif
+                                @if($room->status === 'occupied')
+                                    (Dolu)
+                                @endif
+                            </option>
+                        @endif
+                    @endforeach
+                </select>
+                <p class="text-xs text-muted-foreground mt-1">Misafir seçilen odaya otomatik olarak check-in yapılır.</p>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Dil</label>
+                <select name="language" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="tr">Türkçe</option>
+                    <option value="en">English</option>
+                    <option value="de">Deutsch</option>
+                    <option value="fr">Français</option>
+                    <option value="es">Español</option>
+                    <option value="it">Italiano</option>
+                    <option value="ru">Русский</option>
+                    <option value="ar">العربية</option>
+                    <option value="zh">中文</option>
+                    <option value="ja">日本語</option>
+                </select>
+            </div>
+
+            <div class="flex gap-2 justify-end">
+                <x-ui.button type="button" variant="outline" data-close-modal="create_guest_modal">İptal</x-ui.button>
+                <x-ui.button type="submit">Oluştur</x-ui.button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Check-out form action'ını güncelle
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkoutForm = document.getElementById('checkout_form');
+        
+        if (checkoutForm) {
+            document.querySelectorAll('[data-checkout]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const stayId = this.getAttribute('data-stay-id');
+                    checkoutForm.action = '/admin/guests/' + stayId + '/check-out';
+                });
+            });
+        }
+    });
+</script>
 @endsection

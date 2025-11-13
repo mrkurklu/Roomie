@@ -63,6 +63,103 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* New design color utilities - matching the image */
+  .bg-background-light {
+    background-color: #f6f6f6;
+  }
+  
+  .bg-background-dark {
+    background-color: #222831 !important;
+  }
+  
+  .dark .bg-background-dark {
+    background-color: #222831 !important;
+  }
+  
+  .bg-surface-light {
+    background-color: #d6e4f0;
+  }
+  
+  .dark .bg-surface-light {
+    background-color: #393e46 !important;
+  }
+  
+  .bg-surface-dark {
+    background-color: #393e46 !important;
+  }
+  
+  .dark .bg-surface-dark {
+    background-color: #393e46 !important;
+  }
+  
+  .text-text-light {
+    color: #222831;
+  }
+  
+  .dark .text-text-light {
+    color: #eeeeee !important;
+  }
+  
+  .text-text-dark {
+    color: #eeeeee !important;
+  }
+  
+  .dark .text-text-dark {
+    color: #eeeeee !important;
+  }
+  
+  .text-primary-light {
+    color: #1e56a0;
+  }
+  
+  .dark .text-primary-light {
+    color: #0092ca !important;
+  }
+  
+  .text-primary-dark {
+    color: #0092ca !important;
+  }
+  
+  .dark .text-primary-dark {
+    color: #0092ca !important;
+  }
+  
+  .text-secondary-accent-light {
+    color: #163172;
+  }
+  
+  .text-secondary-accent-dark {
+    color: #eeeeee !important;
+  }
+  
+  .dark .text-secondary-accent-dark {
+    color: #eeeeee !important;
+  }
+  
+  .border-primary-light {
+    border-color: #1e56a0;
+  }
+  
+  .border-primary-dark {
+    border-color: #0092ca !important;
+  }
+  
+  .dark .border-primary-dark {
+    border-color: #0092ca !important;
+  }
+  
+  .border-surface-light {
+    border-color: #d6e4f0;
+  }
+  
+  .border-surface-dark {
+    border-color: #393e46 !important;
+  }
+  
+  .dark .border-surface-dark {
+    border-color: #393e46 !important;
+  }
 }
 
 @layer utilities {

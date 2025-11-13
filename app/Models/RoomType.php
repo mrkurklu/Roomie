@@ -9,9 +9,20 @@ class RoomType extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['hotel_id', 'name', 'description', 'price_per_night', 'capacity'];
+
+    protected $casts = [
+        'price_per_night' => 'decimal:2',
+    ];
+
     // Bir oda tipinin birden çok odası olabilir.
     public function rooms()
     {
         return $this->hasMany(Room::class);
+    }
+
+    public function hotel()
+    {
+        return $this->belongsTo(Hotel::class);
     }
 }

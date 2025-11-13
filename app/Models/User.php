@@ -12,7 +12,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $fillable = [ 'name', 'email', 'password', 'hotel_id', 'language' ];
+    protected $fillable = [ 'name', 'email', 'password', 'hotel_id', 'language', 'tc_no' ];
     protected $hidden = [ 'password', 'remember_token' ];
     protected $casts = [ 'email_verified_at' => 'datetime' ];
 
@@ -90,5 +90,20 @@ class User extends Authenticatable
     public function requests()
     {
         return $this->hasMany(Request::class);
+    }
+
+    public function guestStays()
+    {
+        return $this->hasMany(GuestStay::class);
+    }
+
+    public function activeGuestStay()
+    {
+        return $this->hasOne(GuestStay::class)->where('status', 'checked_in');
+    }
+
+    public function assignedRooms()
+    {
+        return $this->hasMany(Room::class, 'assigned_staff_id');
     }
 }

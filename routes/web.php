@@ -42,6 +42,22 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/messages', [DashboardController::class, 'storeMessage'])->name('admin.messages.store');
     Route::patch('/messages/{message}/read', [DashboardController::class, 'markMessageRead'])->name('admin.messages.read');
     Route::get('/guests', [DashboardController::class, 'guests'])->name('admin.guests');
+    Route::post('/guests/check-in', [DashboardController::class, 'checkIn'])->name('admin.guests.checkin');
+    Route::post('/guests/{guestStay}/check-out', [DashboardController::class, 'checkOut'])->name('admin.guests.checkout');
+    Route::post('/guests/create', [DashboardController::class, 'createGuest'])->name('admin.guests.create');
+    Route::get('/rooms', [DashboardController::class, 'rooms'])->name('admin.rooms');
+    Route::post('/rooms/create', [DashboardController::class, 'createRooms'])->name('admin.rooms.create');
+    Route::post('/rooms/{room}/update', [DashboardController::class, 'updateRoom'])->name('admin.rooms.update');
+    Route::get('/rooms/{room}/history', [DashboardController::class, 'getRoomHistory'])->name('admin.rooms.history');
+    Route::post('/rooms/assign-staff', [DashboardController::class, 'assignStaffToRoom'])->name('admin.rooms.assignStaff');
+    Route::post('/room-types/create', [DashboardController::class, 'createRoomType'])->name('admin.roomtypes.create');
+    Route::post('/room-types/{roomType}/update', [DashboardController::class, 'updateRoomType'])->name('admin.roomtypes.update');
+    Route::delete('/room-types/{roomType}', [DashboardController::class, 'deleteRoomType'])->name('admin.roomtypes.delete');
+    Route::delete('/rooms/{room}', [DashboardController::class, 'deleteRoom'])->name('admin.rooms.delete');
+    Route::get('/staff', [DashboardController::class, 'staff'])->name('admin.staff');
+    Route::post('/staff/create', [DashboardController::class, 'createStaff'])->name('admin.staff.create');
+    Route::post('/staff/{staff}/update', [DashboardController::class, 'updateStaff'])->name('admin.staff.update');
+    Route::delete('/staff/{staff}', [DashboardController::class, 'deleteStaff'])->name('admin.staff.delete');
     Route::get('/billing', [DashboardController::class, 'billing'])->name('admin.billing');
     Route::get('/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
     Route::get('/settings', [DashboardController::class, 'settings'])->name('admin.settings');
@@ -67,11 +83,14 @@ Route::prefix('staff')->middleware(['auth'])->group(function () {
     Route::post('/events', [StaffController::class, 'storeEvent'])->name('staff.events.store');
     Route::patch('/events/{event}', [StaffController::class, 'updateEvent'])->name('staff.events.update');
     Route::delete('/events/{event}', [StaffController::class, 'deleteEvent'])->name('staff.events.delete');
+    Route::post('/guests/check-in', [StaffController::class, 'checkIn'])->name('staff.guests.checkin');
+    Route::post('/guests/{guestStay}/check-out', [StaffController::class, 'checkOut'])->name('staff.guests.checkout');
 });
 
 // --- MİSAFİR PANELİ ROTALARI ---
 Route::prefix('guest')->middleware(['auth'])->group(function () {
     Route::get('/welcome', [GuestController::class, 'welcome'])->name('guest.welcome');
+    Route::get('/events', [GuestController::class, 'events'])->name('guest.events');
     Route::get('/events/{event}', [GuestController::class, 'showEvent'])->name('guest.events.show');
     Route::get('/chat', [GuestController::class, 'chat'])->name('guest.chat');
     Route::post('/chat', [GuestController::class, 'storeMessage'])->name('guest.chat.store');

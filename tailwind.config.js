@@ -52,6 +52,17 @@ module.exports = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+                // New design colors
+                "primary-light": "#1e56a0",
+                "secondary-accent-light": "#163172",
+                "background-light": "#f6f6f6",
+                "surface-light": "#d6e4f0",
+                "text-light": "#222831",
+                "primary-dark": "#0092ca",
+                "secondary-accent-dark": "#eeeeee",
+                "background-dark": "#222831",
+                "surface-dark": "#393e46",
+                "text-dark": "#eeeeee",
             },
             borderRadius: {
                 lg: "var(--radius)",
@@ -60,6 +71,7 @@ module.exports = {
             },
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                display: ['Plus Jakarta Sans', 'sans-serif'],
             },
         },
     },

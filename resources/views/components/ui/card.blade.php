@@ -1,6 +1,6 @@
 @props(['class' => ''])
 
-<div class="rounded-xl first-color dark:bg-slate-800 border-2 border-white/20 dark:border-slate-700 text-white dark:text-slate-100 shadow-md dark:shadow-xl hover:shadow-lg dark:hover:shadow-2xl transition-shadow duration-200 {{ $class }}">
+<div class="rounded-xl bg-white dark:bg-surface-dark border border-primary-light/10 dark:border-primary-dark/10 text-text-light dark:text-text-dark shadow-sm hover:shadow-md transition-shadow duration-200 {{ $class }}">
     {{ $slot }}
 </div>
 
