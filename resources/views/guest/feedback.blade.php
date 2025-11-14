@@ -4,6 +4,42 @@
 
 @push('scripts')
 <script>
+    function selectRating(rating) {
+        // Set radio button value
+        document.querySelectorAll('.rating-input').forEach((input, index) => {
+            if (index + 1 === rating) {
+                input.checked = true;
+            }
+        });
+        
+        // Update star display
+        document.querySelectorAll('.rating-star').forEach((star, index) => {
+            if (index + 1 <= rating) {
+                star.classList.remove('bg-transparent', 'border-primary-light/50', 'dark:border-primary-dark/50', 'text-primary-light', 'dark:text-primary-dark');
+                star.classList.add('bg-primary-light', 'dark:bg-primary-dark', 'border-primary-light', 'dark:border-primary-dark', 'text-white');
+                star.querySelector('span').textContent = 'star';
+                star.querySelector('span').classList.add('fill-current');
+            } else {
+                star.classList.remove('bg-primary-light', 'dark:bg-primary-dark', 'border-primary-light', 'dark:border-primary-dark', 'text-white');
+                star.classList.add('bg-transparent', 'border-primary-light/50', 'dark:border-primary-dark/50', 'text-primary-light', 'dark:text-primary-dark');
+                star.querySelector('span').textContent = 'star';
+                star.querySelector('span').classList.remove('fill-current');
+            }
+        });
+        
+        // Hide error
+        document.getElementById('rating-error').classList.add('hidden');
+    }
+
+    function validateFeedbackForm() {
+        const rating = document.querySelector('input[name="rating"]:checked');
+        if (!rating) {
+            document.getElementById('rating-error').classList.remove('hidden');
+            return false;
+        }
+        return true;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -56,37 +92,36 @@
                 <!-- Rating Section -->
                 <div class="space-y-4">
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-text-light dark:text-text-dark">Genel Deneyim</label>
-                        <div class="flex gap-2" x-data="{ selected: 0 }">
+                        <label class="text-sm font-medium text-text-light dark:text-text-dark">Genel Deneyim *</label>
+                        <div class="flex gap-2" id="rating-container">
                             @for($i = 1; $i <= 5; $i++)
                             <label class="cursor-pointer">
-                                <input type="radio" name="rating" value="{{ $i }}" class="hidden" x-model="selected">
-                                <button type="button" class="w-10 h-10 rounded-full border-2 transition-all duration-200 hover:scale-110 flex items-center justify-center {{ $i <= 4 ? 'bg-primary-light dark:bg-primary-dark border-primary-light dark:border-primary-dark text-white' : 'bg-transparent border-primary-light/50 dark:border-primary-dark/50 text-primary-light dark:text-primary-dark' }}">
-                                    <i data-lucide="star" class="w-5 h-5 {{ $i <= 4 ? 'fill-current' : '' }}"></i>
+                                <input type="radio" name="rating" value="{{ $i }}" class="hidden rating-input" required>
+                                <button type="button" onclick="selectRating({{ $i }})" class="rating-star w-10 h-10 rounded-full border-2 transition-all duration-200 hover:scale-110 flex items-center justify-center bg-transparent border-primary-light/50 dark:border-primary-dark/50 text-primary-light dark:text-primary-dark">
+                                    <span class="material-symbols-outlined text-xl">star</span>
                                 </button>
                             </label>
                             @endfor
                         </div>
+                        <p id="rating-error" class="text-xs text-red-600 dark:text-red-400 hidden">Lütfen bir puan seçin</p>
                     </div>
+                    
                     <div class="space-y-2">
-                        <label class="text-sm font-medium text-text-light dark:text-text-dark">Temizlik</label>
-                        <div class="flex gap-2" x-data="{ selected: 0 }">
-                            @for($i = 1; $i <= 5; $i++)
-                            <label class="cursor-pointer">
-                                <input type="radio" name="cleanliness_rating" value="{{ $i }}" class="hidden" x-model="selected">
-                                <button type="button" class="w-10 h-10 rounded-full border-2 transition-all duration-200 hover:scale-110 flex items-center justify-center {{ $i <= 4 ? 'bg-primary-light dark:bg-primary-dark border-primary-light dark:border-primary-dark text-white' : 'bg-transparent border-primary-light/50 dark:border-primary-dark/50 text-primary-light dark:text-primary-dark' }}">
-                                    <i data-lucide="star" class="w-5 h-5 {{ $i <= 4 ? 'fill-current' : '' }}"></i>
-                                </button>
-                            </label>
-                            @endfor
-                        </div>
+                        <label class="text-sm font-medium text-text-light dark:text-text-dark">Kategori</label>
+                        <select name="category" class="w-full rounded-lg border border-primary-light/20 dark:border-primary-dark/20 bg-white dark:bg-background-dark px-4 py-3 text-sm text-text-light dark:text-text-dark focus:outline-none focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark">
+                            <option value="service">Hizmet</option>
+                            <option value="cleanliness">Temizlik</option>
+                            <option value="comfort">Konfor</option>
+                            <option value="value">Değer</option>
+                            <option value="other">Diğer</option>
+                        </select>
                     </div>
                 </div>
 
                 <!-- Form Fields -->
                 <div class="space-y-2">
                     <label class="text-sm font-medium text-text-light dark:text-text-dark">Başlık</label>
-                    <input type="text" name="title" placeholder="Geri bildiriminizi özetleyin" class="w-full rounded-lg border border-primary-light/20 dark:border-primary-dark/20 bg-white dark:bg-background-dark px-4 py-3 text-sm text-text-light dark:text-text-dark placeholder:text-text-light/50 dark:placeholder:text-text-dark/50 focus:outline-none focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark">
+                    <input type="text" name="title" placeholder="Geri bildiriminizi özetleyin (opsiyonel)" class="w-full rounded-lg border border-primary-light/20 dark:border-primary-dark/20 bg-white dark:bg-background-dark px-4 py-3 text-sm text-text-light dark:text-text-dark placeholder:text-text-light/50 dark:placeholder:text-text-dark/50 focus:outline-none focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark">
                 </div>
 
                 <div class="space-y-2">
@@ -94,7 +129,8 @@
                     <textarea name="comment" rows="6" placeholder="Deneyiminiz hakkında daha fazla bilgi verin..." class="w-full rounded-lg border border-primary-light/20 dark:border-primary-dark/20 bg-white dark:bg-background-dark px-4 py-3 text-sm text-text-light dark:text-text-dark placeholder:text-text-light/50 dark:placeholder:text-text-dark/50 focus:outline-none focus:ring-2 focus:ring-primary-light dark:focus:ring-primary-dark resize-none"></textarea>
                 </div>
 
-                <button type="submit" class="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary-light dark:bg-primary-dark text-white hover:opacity-90 transition-opacity text-sm font-medium">
+                <button type="submit" onclick="return validateFeedbackForm()" class="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary-light dark:bg-primary-dark text-white hover:opacity-90 transition-opacity text-sm font-medium">
+                    <span class="material-symbols-outlined text-lg">send</span>
                     Gönder
                 </button>
             </form>

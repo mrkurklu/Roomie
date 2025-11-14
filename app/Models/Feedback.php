@@ -9,9 +9,11 @@ class Feedback extends Model
 {
     use HasFactory;
 
+    protected $table = 'feedbacks';
+
     protected $fillable = [
         'hotel_id', 'user_id', 'guest_name', 'guest_email',
-        'rating', 'comment', 'category', 'is_public', 'is_responded'
+        'rating', 'title', 'comment', 'category', 'is_public', 'is_responded'
     ];
 
     protected $casts = [

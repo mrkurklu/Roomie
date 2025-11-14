@@ -93,7 +93,7 @@
 @endsection
 
 @section('content')
-<div class="relative flex h-[calc(100vh-120px)] sm:h-[calc(100vh-100px)] min-h-[600px] w-full flex-col items-center justify-center p-3 sm:p-4 md:p-6 lg:p-8 bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-[calc(100vh-120px)] sm:h-[calc(100vh-100px)] min-h-[600px] w-full flex-col items-center justify-center p-3 sm:p-4 md:p-6 lg:p-8 bg-white dark:bg-background-dark font-display">
     <!-- Chat Window Container -->
     <div class="flex h-full w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-surface-dark">
         <!-- Header Bar -->
@@ -102,19 +102,37 @@
                 @php
                     $hotel = auth()->user()->hotel;
                     $hotelLogo = $hotel->logo ?? null;
+                    $activeStay = \App\Models\GuestStay::where('user_id', auth()->id())
+                        ->where('status', 'checked_in')
+                        ->with('room.assignedStaff')
+                        ->first();
+                    $assignedStaff = $activeStay && $activeStay->room ? $activeStay->room->assignedStaff : null;
                 @endphp
                 <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-primary-dark/20 flex items-center justify-center">
-                    @if($hotelLogo)
+                    @if($assignedStaff && $assignedStaff->avatar_url)
+                        <img src="{{ asset($assignedStaff->avatar_url) }}" alt="Personel" class="w-full h-full rounded-full object-cover">
+                    @elseif($hotelLogo)
                         <img src="{{ asset($hotelLogo) }}" alt="Hotel logo" class="w-full h-full rounded-full object-cover">
                     @else
                         <span class="material-symbols-outlined text-primary-dark text-xl sm:text-2xl">hotel</span>
                     @endif
                 </div>
                 <div class="min-w-0 flex-1">
-                    <h1 class="text-base sm:text-lg font-bold text-gray-800 dark:text-text-dark truncate">Resepsiyon</h1>
+                    <h1 class="text-base sm:text-lg font-bold text-gray-800 dark:text-text-dark truncate">
+                        @if($assignedStaff)
+                            {{ $assignedStaff->name }}
+                        @else
+                            Resepsiyon
+                        @endif
+                    </h1>
                     <div class="flex items-center gap-1.5">
-                        <div class="h-2 w-2 rounded-full bg-green-500"></div>
-                        <p class="text-xs sm:text-sm font-normal leading-normal text-gray-500 dark:text-gray-400">Çevrimiçi</p>
+                        @if($assignedStaff)
+                            <div class="h-2 w-2 rounded-full bg-green-500"></div>
+                            <p class="text-xs sm:text-sm font-normal leading-normal text-gray-500 dark:text-gray-400">Odanıza Atanmış Personel</p>
+                        @else
+                            <div class="h-2 w-2 rounded-full bg-yellow-500"></div>
+                            <p class="text-xs sm:text-sm font-normal leading-normal text-gray-500 dark:text-gray-400">Odanıza personel atanmamış</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -126,14 +144,17 @@
         </div>
 
         <!-- Message Area -->
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6">
-            <div class="flex flex-col gap-4 min-h-full">
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50/50 dark:bg-gray-900/20">
+            <div class="flex flex-col gap-1 min-h-full">
                 @php
                     $prevDate = null;
+                    $prevSenderId = null;
+                    $messagesArray = $messages ?? [];
                 @endphp
-                @forelse($messages ?? [] as $message)
+                @forelse($messagesArray as $index => $message)
                     @php
-                        $senderId = $message->attributes['sender_id'] ?? $message->from_user_id;
+                        // sender_id veya from_user_id kullan (model'de map ediliyor)
+                        $senderId = $message->sender_id ?? $message->from_user_id ?? ($message->attributes['sender_id'] ?? null);
                         $isFromMe = $senderId == auth()->id();
                         $displayName = $isFromMe ? 'Siz' : ($message->fromUser->name ?? 'Resepsiyon');
                         $displayContent = $message->display_content ?? $message->content;
@@ -142,11 +163,22 @@
                         $currentDate = $message->created_at->format('Y-m-d');
                         $showDate = $prevDate === null || $currentDate !== $prevDate;
                         $prevDate = $currentDate;
+                        
+                        // Mesaj gruplaması: Aynı kişiden ardışık mesajlar
+                        $isGrouped = $prevSenderId !== null && $prevSenderId === $senderId;
+                        
+                        // Sonraki mesajı kontrol et
+                        $nextMessage = $messagesArray[$index + 1] ?? null;
+                        $nextSenderId = $nextMessage ? ($nextMessage->sender_id ?? $nextMessage->from_user_id ?? ($nextMessage->attributes['sender_id'] ?? null)) : null;
+                        $isLastInGroup = $nextSenderId !== $senderId;
+                        
+                        // Önceki sender ID'yi güncelle
+                        $prevSenderId = $senderId;
                     @endphp
                     
                     @if($showDate)
-                        <div class="flex justify-center">
-                            <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-normal leading-normal rounded-full bg-gray-200 px-3 py-1 dark:bg-background-dark">
+                        <div class="flex justify-center my-4">
+                            <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium rounded-full bg-white dark:bg-gray-800 px-4 py-1.5 shadow-sm border border-gray-200 dark:border-gray-700">
                                 @php
                                     $today = \Carbon\Carbon::today()->format('Y-m-d');
                                     $yesterday = \Carbon\Carbon::yesterday()->format('Y-m-d');
@@ -163,37 +195,52 @@
                     @endif
                     
                     @if($isFromMe)
-                        <!-- Guest Message (Right) -->
-                        <div class="flex items-end gap-3 self-end max-w-[80%] md:max-w-[60%]">
-                            <div class="flex flex-1 flex-col gap-1 items-end">
-                                <div class="relative">
-                                    <p class="text-base font-normal leading-normal flex rounded-t-lg rounded-bl-lg px-4 py-3 bg-primary-light text-white dark:bg-primary-dark dark:text-secondary-accent-dark whitespace-pre-wrap break-words">
-                                        {{ $displayContent }}
-                                    </p>
-                                    <p class="text-xs text-gray-400 dark:text-gray-500 absolute -bottom-5 left-0 whitespace-nowrap">{{ $time }}</p>
+                        <!-- Guest Message (Right) - WhatsApp/Telegram Style -->
+                        <div class="flex items-end gap-2 self-end max-w-[75%] md:max-w-[65%] mb-1 group message-item" style="animation: slideInRight 0.3s ease-out;">
+                            <div class="flex flex-col items-end gap-0.5">
+                                <div class="relative group/message">
+                                    <div class="rounded-2xl rounded-br-md px-4 py-2.5 bg-primary-light text-white dark:bg-primary-dark shadow-sm hover:shadow-md transition-shadow">
+                                        <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words">{{ $displayContent }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-1 mt-1 px-1 opacity-0 group-hover/message:opacity-100 transition-opacity">
+                                        <span class="text-[11px] text-gray-400 dark:text-gray-500">{{ $time }}</span>
+                                        @if($isLastInGroup)
+                                            <svg class="w-3.5 h-3.5 text-primary-light dark:text-primary-dark" fill="currentColor" viewBox="0 0 16 15">
+                                                <path d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.175a.366.366 0 0 0-.063-.51zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.175a.365.365 0 0 0-.063-.51z"/>
+                                            </svg>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     @else
-                        <!-- Reception Message (Left) -->
-                        <div class="flex items-end gap-3 self-start max-w-[80%] md:max-w-[60%]">
+                        <!-- Reception Message (Left) - WhatsApp/Telegram Style -->
+                        <div class="flex items-end gap-2 self-start max-w-[75%] md:max-w-[65%] mb-1 group message-item" style="animation: slideInLeft 0.3s ease-out;">
                             @php
                                 $receptionAvatar = $message->fromUser->avatar_url ?? null;
                             @endphp
-                            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-8 h-8 shrink-0 flex items-center justify-center overflow-hidden" style="background-image: url('{{ $receptionAvatar ? asset($receptionAvatar) : '' }}'); background-color: {{ $receptionAvatar ? 'transparent' : 'rgba(0, 146, 202, 0.2)' }};">
-                                @if(!$receptionAvatar)
-                                    <span class="material-symbols-outlined text-primary-dark text-sm">support_agent</span>
-                                @endif
-                            </div>
-                            <div class="flex flex-1 flex-col gap-1 items-start">
-                                <div class="flex w-full items-baseline justify-between">
-                                    <p class="text-secondary-accent-light dark:text-secondary-accent-dark text-[13px] font-medium leading-normal">{{ $displayName }}</p>
+                            @if($isLastInGroup || !$isGrouped)
+                                <div class="w-8 h-8 rounded-full bg-primary-light/20 dark:bg-primary-dark/20 flex items-center justify-center overflow-hidden flex-shrink-0 mb-0.5">
+                                    @if($receptionAvatar)
+                                        <img src="{{ asset($receptionAvatar) }}" alt="{{ $displayName }}" class="w-full h-full object-cover">
+                                    @else
+                                        <span class="material-symbols-outlined text-primary-dark text-sm">support_agent</span>
+                                    @endif
                                 </div>
-                                <div class="relative">
-                                    <p class="text-base font-normal leading-normal flex rounded-t-lg rounded-br-lg bg-surface-light px-4 py-3 text-secondary-accent-light dark:bg-background-dark dark:text-secondary-accent-dark whitespace-pre-wrap break-words">
-                                        {{ $displayContent }}
-                                    </p>
-                                    <p class="text-xs text-gray-400 dark:text-gray-500 absolute -bottom-5 right-0 whitespace-nowrap">{{ $time }}</p>
+                            @else
+                                <div class="w-8 flex-shrink-0"></div>
+                            @endif
+                            <div class="flex flex-col items-start gap-0.5 flex-1">
+                                @if(!$isGrouped)
+                                    <p class="text-[12px] text-gray-500 dark:text-gray-400 font-medium px-1 mb-0.5">{{ $displayName }}</p>
+                                @endif
+                                <div class="relative group/message">
+                                    <div class="rounded-2xl rounded-bl-md px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700">
+                                        <p class="text-[15px] leading-relaxed whitespace-pre-wrap break-words">{{ $displayContent }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-1 mt-1 px-1 opacity-0 group-hover/message:opacity-100 transition-opacity">
+                                        <span class="text-[11px] text-gray-400 dark:text-gray-500">{{ $time }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -203,8 +250,20 @@
                         <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-background-dark flex items-center justify-center mb-4">
                             <span class="material-symbols-outlined text-3xl text-gray-400 dark:text-gray-500">chat_bubble_outline</span>
                         </div>
-                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Henüz mesaj yok</p>
-                        <p class="text-gray-500 dark:text-gray-500 text-xs">İlk mesajınızı göndererek sohbete başlayın</p>
+                        @php
+                            $activeStay = \App\Models\GuestStay::where('user_id', auth()->id())
+                                ->where('status', 'checked_in')
+                                ->with('room.assignedStaff')
+                                ->first();
+                            $assignedStaff = $activeStay && $activeStay->room ? $activeStay->room->assignedStaff : null;
+                        @endphp
+                        @if($assignedStaff)
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Henüz mesaj yok</p>
+                            <p class="text-gray-500 dark:text-gray-500 text-xs">İlk mesajınızı göndererek {{ $assignedStaff->name }} ile sohbete başlayın</p>
+                        @else
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Odanıza personel atanmamış</p>
+                            <p class="text-gray-500 dark:text-gray-500 text-xs">Mesaj göndermek için önce odanıza personel atanması gerekmektedir</p>
+                        @endif
                     </div>
                 @endforelse
             </div>
@@ -223,19 +282,19 @@
         @endif
 
         <!-- Message Input Area -->
-        <div class="mt-auto border-t border-gray-200/50 p-3 sm:p-4 dark:border-gray-700/50">
+        <div class="mt-auto border-t border-gray-200/50 p-3 sm:p-4 dark:border-gray-700/50 bg-white dark:bg-surface-dark">
             <form method="POST" action="{{ route('guest.chat.store') }}" id="chat-form">
                 @csrf
                 <input type="hidden" name="browser_language" id="browser_language" value="">
-                <div class="flex items-end gap-2 rounded-lg bg-gray-100 p-2 dark:bg-background-dark">
-                    <button type="button" class="p-1.5 sm:p-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-surface-dark/50 transition-colors flex-shrink-0">
-                        <span class="material-symbols-outlined text-lg sm:text-xl">add_circle</span>
+                <div class="flex items-end gap-2 rounded-2xl bg-gray-100 dark:bg-gray-800 p-2 border border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-primary-light/50 dark:focus-within:ring-primary-dark/50 transition-all">
+                    <button type="button" class="p-2 text-gray-500 hover:text-primary-light dark:hover:text-primary-dark rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0">
+                        <span class="material-symbols-outlined text-xl">add_circle</span>
                     </button>
                     <textarea 
                         name="content" 
                         id="message-input"
                         rows="1"
-                        class="flex-1 resize-none border-none bg-transparent p-2 text-gray-800 placeholder-gray-500 focus:ring-0 focus:outline-none dark:text-white dark:placeholder-gray-400 text-sm sm:text-base"
+                        class="flex-1 resize-none border-none bg-transparent p-2.5 text-gray-800 placeholder-gray-400 focus:ring-0 focus:outline-none dark:text-white dark:placeholder-gray-500 text-[15px] leading-relaxed"
                         placeholder="Mesajınızı yazın..."
                         required
                         autocomplete="off"
@@ -243,9 +302,9 @@
                     ></textarea>
                     <button 
                         type="submit" 
-                        class="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-primary-light text-white dark:bg-primary-dark dark:text-secondary-accent-dark hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-light text-white dark:bg-primary-dark hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
                     >
-                        <span class="material-symbols-outlined text-lg sm:text-xl">send</span>
+                        <span class="material-symbols-outlined text-xl">send</span>
                     </button>
                 </div>
             </form>
@@ -257,6 +316,25 @@
     #chat-messages {
         scrollbar-width: thin;
         scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+        background-image: 
+            repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 20px,
+                rgba(0, 0, 0, 0.02) 20px,
+                rgba(0, 0, 0, 0.02) 21px
+            );
+    }
+    
+    .dark #chat-messages {
+        background-image: 
+            repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 20px,
+                rgba(255, 255, 255, 0.02) 20px,
+                rgba(255, 255, 255, 0.02) 21px
+            );
     }
     
     #chat-messages::-webkit-scrollbar {
@@ -284,6 +362,28 @@
         background: rgba(255, 255, 255, 0.3);
     }
     
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
     @keyframes fadeIn {
         from {
             opacity: 0;
@@ -298,11 +398,24 @@
     .animate-fade-in {
         animation: fadeIn 0.3s ease-out;
     }
-
+    
+    .message-item {
+        animation-fill-mode: both;
+    }
+    
     /* Textarea auto-resize */
     #message-input {
         max-height: 120px;
         overflow-y: auto;
+    }
+    
+    /* Message bubble hover effects */
+    .group\/message:hover .shadow-sm {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dark .group\/message:hover .shadow-sm {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
 </style>
 @endsection

@@ -15,7 +15,7 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="font-sans antialiased bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark transition-colors duration-300">
+<body class="font-sans antialiased bg-white dark:bg-background-dark text-text-light dark:text-text-dark transition-colors duration-300">
     <div class="min-h-screen flex flex-col">
         <!-- Topbar -->
         <div class="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-surface-light/70 dark:supports-[backdrop-filter]:bg-surface-dark/70 border-b border-primary-light/10 dark:border-primary-dark/10">
@@ -93,7 +93,7 @@
                                         required 
                                         autofocus 
                                         autocomplete="username"
-                                        class="pl-9 bg-background-light dark:bg-background-dark border-primary-light/20 dark:border-primary-dark/20 text-text-light dark:text-text-dark"
+                                        class="pl-9 bg-white dark:bg-background-dark border-primary-light/20 dark:border-primary-dark/20 text-text-light dark:text-text-dark"
                                         placeholder="ornek@email.com veya TC Kimlik No"
                                     />
                                 </div>
@@ -110,10 +110,14 @@
                                         name="password" 
                                         required 
                                         autocomplete="current-password"
-                                        class="pl-9 bg-background-light dark:bg-background-dark border-primary-light/20 dark:border-primary-dark/20 text-text-light dark:text-text-dark"
-                                        placeholder="••••••••"
+                                        class="pl-9 bg-white dark:bg-background-dark border-primary-light/20 dark:border-primary-dark/20 text-text-light dark:text-text-dark"
+                                        placeholder="Şifrenizi girin"
                                     />
                                 </div>
+                                <p class="text-xs text-text-light/60 dark:text-text-dark/60">
+                                    <i data-lucide="info" class="w-3 h-3 inline-block mr-1"></i>
+                                    Misafirler için şifre TC Kimlik Numaranızdır.
+                                </p>
                             </div>
 
                             <!-- Remember Me & Forgot Password -->

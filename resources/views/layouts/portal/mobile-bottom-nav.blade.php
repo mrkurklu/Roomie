@@ -56,13 +56,15 @@
         x-transition:leave="transition ease-in duration-300"
         x-transition:leave-start="translate-y-0 opacity-100 scale-100"
         x-transition:leave-end="translate-y-full opacity-0 scale-95"
-        style="position: fixed; bottom: 0; left: 0; right: 0; background-color: hsl(var(--background) / 0.95); backdrop-filter: blur(12px); border-top: 1px solid hsl(var(--border)); z-index: 9999; border-radius: 1.5rem 1.5rem 0 0; box-shadow: 0 -20px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1); max-height: 70vh; overflow-y: auto; transform-origin: bottom center;"
+        class="bg-blue-500 dark:bg-blue-600 border-t border-blue-400 dark:border-blue-500"
+        style="position: fixed; bottom: 0; left: 0; right: 0; backdrop-filter: blur(12px); z-index: 9999; border-radius: 1.5rem 1.5rem 0 0; box-shadow: 0 -20px 25px -5px rgba(37, 99, 235, 0.3), 0 -8px 10px -6px rgba(37, 99, 235, 0.2); max-height: 70vh; overflow-y: auto; transform-origin: bottom center;"
         x-cloak
     >
         <div class="px-4 pt-4 pb-6" style="padding-bottom: 2rem;" x-data="{ itemsVisible: false }" x-init="setTimeout(() => itemsVisible = true, 100)">
             <!-- Drag Handle -->
             <div 
-                style="height: 0.25rem; width: 3rem; background-color: hsl(var(--muted)); border-radius: 9999px; margin: 0 auto 1rem auto;"
+                class="bg-blue-300 dark:bg-blue-400"
+                style="height: 0.25rem; width: 3rem; border-radius: 9999px; margin: 0 auto 1rem auto;"
                 x-show="itemsVisible"
                 x-transition:enter="transition ease-out duration-300 delay-100"
                 x-transition:enter-start="opacity-0 scale-50"
@@ -120,23 +122,23 @@
                         <span class="text-[11px] font-medium text-center">Kaynak</span>
                     </a>
                 @else
-                    <a href="{{ route('guest.welcome') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'welcome' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
+                    <a href="{{ route('guest.welcome') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-blue-400/20 dark:bg-blue-500/20 hover:bg-blue-400/30 dark:hover:bg-blue-500/30 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'welcome' ? 'bg-white/30 dark:bg-white/20 text-white' : 'text-white' }}" style="animation: fadeInUp 0.3s ease-out 0.1s both;">
                         <i data-lucide="hotel" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Ana</span>
                     </a>
-                    <a href="{{ route('guest.chat') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'chat' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
+                    <a href="{{ route('guest.chat') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-blue-400/20 dark:bg-blue-500/20 hover:bg-blue-400/30 dark:hover:bg-blue-500/30 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'chat' ? 'bg-white/30 dark:bg-white/20 text-white' : 'text-white' }}" style="animation: fadeInUp 0.3s ease-out 0.15s both;">
                         <i data-lucide="message-square" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Sohbet</span>
                     </a>
-                    <a href="{{ route('guest.requests') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'requests' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
+                    <a href="{{ route('guest.requests') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-blue-400/20 dark:bg-blue-500/20 hover:bg-blue-400/30 dark:hover:bg-blue-500/30 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'requests' ? 'bg-white/30 dark:bg-white/20 text-white' : 'text-white' }}" style="animation: fadeInUp 0.3s ease-out 0.2s both;">
                         <i data-lucide="concierge-bell" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Talep</span>
                     </a>
-                    <a href="{{ route('guest.services') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'services' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
+                    <a href="{{ route('guest.services') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-blue-400/20 dark:bg-blue-500/20 hover:bg-blue-400/30 dark:hover:bg-blue-500/30 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'services' ? 'bg-white/30 dark:bg-white/20 text-white' : 'text-white' }}" style="animation: fadeInUp 0.3s ease-out 0.25s both;">
                         <i data-lucide="sparkles" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Hizmetlerimiz</span>
                     </a>
-                    <a href="{{ route('guest.feedback') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-surface-dark hover:bg-surface-dark/80 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'feedback' ? 'bg-primary-dark text-text-dark' : 'text-text-dark' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
+                    <a href="{{ route('guest.feedback') }}" @click="menuOpen = false" class="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-blue-400/20 dark:bg-blue-500/20 hover:bg-blue-400/30 dark:hover:bg-blue-500/30 transition-all duration-200 hover:scale-105 {{ ($activeTab ?? 'welcome') === 'feedback' ? 'bg-white/30 dark:bg-white/20 text-white' : 'text-white' }}" style="animation: fadeInUp 0.3s ease-out 0.3s both;">
                         <i data-lucide="star" class="w-5 h-5"></i>
                         <span class="text-[11px] font-medium text-center">Puan</span>
                     </a>

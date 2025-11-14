@@ -66,6 +66,7 @@ class GuestController extends Controller
                     $q->whereNull('end_date')
                       ->orWhere('end_date', '>=', now());
                 })
+                ->with('images')
                 ->orderBy('priority', 'desc')
                 ->orderBy('start_date', 'asc')
                 ->paginate(12);
@@ -114,28 +115,62 @@ class GuestController extends Controller
             ]);
         }
 
-        // Veritabanında sender_id kolonu var, bu yüzden direkt sender_id kullanıyoruz
-        $messages = Message::where('hotel_id', $hotelId)
-            ->where(function($q) use ($user) {
-                $q->where('sender_id', $user->id)
-                  ->orWhere('to_user_id', $user->id);
-            })
-            ->where('type', 'guest')
-            ->with(['fromUser', 'toUser'])
-            ->orderBy('created_at', 'asc')
-            ->get();
+        // Misafirin aktif oda rezervasyonunu kontrol et
+        $activeStay = GuestStay::where('user_id', $user->id)
+            ->where('status', 'checked_in')
+            ->with('room.assignedStaff')
+            ->first();
 
-        // Debug: Mesaj sayısını logla
-        \Log::info('Chat messages count: ' . $messages->count(), [
+        // Sadece odaya atanmış personel ile mesajlaşmayı göster
+        $assignedStaffId = null;
+        if ($activeStay && $activeStay->room && $activeStay->room->assigned_staff_id) {
+            $assignedStaff = User::find($activeStay->room->assigned_staff_id);
+            if ($assignedStaff && $assignedStaff->hotel_id == $hotelId && $assignedStaff->hasRole('personel')) {
+                $assignedStaffId = $assignedStaff->id;
+            }
+        }
+
+        // Sadece misafir ve odaya atanmış personel arasındaki mesajları göster
+        if ($assignedStaffId) {
+            // sender_id kolonunu direkt kullan (veritabanında bu kolon var)
+            $messages = Message::where('hotel_id', $hotelId)
+                ->where('type', 'guest')
+                ->where(function($q) use ($user, $assignedStaffId) {
+                    // Misafirden personele veya personelden misafire mesajlar
+                    // sender_id ve from_user_id aynı şey (model'de map ediliyor)
+                    $q->where(function($subQ) use ($user, $assignedStaffId) {
+                        $subQ->where('sender_id', $user->id)
+                             ->where('to_user_id', $assignedStaffId);
+                    })->orWhere(function($subQ) use ($user, $assignedStaffId) {
+                        $subQ->where('sender_id', $assignedStaffId)
+                             ->where('to_user_id', $user->id);
+                    });
+                })
+                ->with(['fromUser', 'toUser'])
+                ->orderBy('created_at', 'asc')
+                ->get();
+        } else {
+            // Odaya atanmış personel yoksa boş mesaj listesi
+            $messages = collect([]);
+        }
+
+        // Debug: Detaylı log
+        \Log::info('Chat messages debug', [
             'user_id' => $user->id,
-            'hotel_id' => $hotelId
+            'hotel_id' => $hotelId,
+            'assigned_staff_id' => $assignedStaffId,
+            'messages_count' => $messages->count(),
+            'active_stay_exists' => $activeStay ? 'yes' : 'no',
+            'room_id' => $activeStay && $activeStay->room ? $activeStay->room->id : null,
+            'room_assigned_staff_id' => $activeStay && $activeStay->room ? $activeStay->room->assigned_staff_id : null,
+            'message_ids' => $messages->pluck('id')->toArray(),
         ]);
 
         // Mesajları kullanıcının diline göre çevir
         $messages->transform(function($message) use ($userLanguage, $user) {
             // Eğer mesaj kullanıcıdan geliyorsa, orijinal içeriği göster
-            // sender_id'yi kontrol ediyoruz çünkü veritabanında bu kolon var
-            $senderId = $message->attributes['sender_id'] ?? $message->from_user_id;
+            // sender_id veya from_user_id kullan (model'de map ediliyor)
+            $senderId = $message->sender_id ?? $message->from_user_id ?? ($message->attributes['sender_id'] ?? null);
             if ($senderId == $user->id) {
                 $message->display_content = $message->original_content ?? $message->content;
             } else {
@@ -173,7 +208,6 @@ class GuestController extends Controller
 
         $stats = [
             'total' => GuestRequest::where('hotel_id', $hotelId)->where('user_id', $user->id)->count(),
-            'pending' => GuestRequest::where('hotel_id', $hotelId)->where('user_id', $user->id)->where('status', 'pending')->count(),
             'in_progress' => GuestRequest::where('hotel_id', $hotelId)->where('user_id', $user->id)->where('status', 'in_progress')->count(),
             'completed' => GuestRequest::where('hotel_id', $hotelId)->where('user_id', $user->id)->where('status', 'completed')->count(),
         ];
@@ -246,26 +280,77 @@ class GuestController extends Controller
 
         $validated = $request->validate([
             'rating' => 'required|integer|min:1|max:5',
+            'title' => 'nullable|string|max:255',
             'comment' => 'nullable|string|max:1000',
             'category' => 'nullable|in:service,cleanliness,comfort,value,other',
         ]);
 
         try {
-            Feedback::create([
+            $feedback = Feedback::create([
                 'hotel_id' => $hotelId,
                 'user_id' => $user->id,
                 'guest_name' => $user->name,
                 'guest_email' => $user->email,
                 'rating' => $validated['rating'],
+                'title' => $validated['title'] ?? null,
                 'comment' => $validated['comment'] ?? null,
                 'category' => $validated['category'] ?? 'service',
                 'is_public' => false,
                 'is_responded' => false,
             ]);
 
-            return redirect()->route('guest.feedback')->with('success', 'Geri bildiriminiz başarıyla gönderildi.');
+            // Admin'e bildirim gönder (mesaj olarak)
+            $admin = User::where('hotel_id', $hotelId)
+                ->whereHas('roles', function($q) {
+                    $q->where('name', 'admin')->orWhere('name', 'yönetici');
+                })
+                ->first();
+
+            if ($admin) {
+                $categoryText = [
+                    'service' => 'Hizmet',
+                    'cleanliness' => 'Temizlik',
+                    'comfort' => 'Konfor',
+                    'value' => 'Değer',
+                    'other' => 'Diğer'
+                ];
+
+                $stars = str_repeat('⭐', $validated['rating']);
+                $messageContent = "Yeni Geri Bildirim\n\n";
+                $messageContent .= "Misafir: {$user->name}\n";
+                $messageContent .= "Puan: {$stars} ({$validated['rating']}/5)\n";
+                $messageContent .= "Kategori: " . ($categoryText[$validated['category'] ?? 'service'] ?? 'Diğer') . "\n";
+                if ($validated['title'] ?? null) {
+                    $messageContent .= "Başlık: {$validated['title']}\n";
+                }
+                if ($validated['comment'] ?? null) {
+                    $messageContent .= "Yorum: " . \Illuminate\Support\Str::limit($validated['comment'], 200) . "\n";
+                }
+
+                Message::create([
+                    'hotel_id' => $hotelId,
+                    'sender_id' => $user->id,
+                    'from_user_id' => $user->id,
+                    'to_user_id' => $admin->id,
+                    'subject' => 'Yeni Geri Bildirim: ' . ($validated['title'] ?? 'Geri Bildirim'),
+                    'content' => $messageContent,
+                    'original_content' => $messageContent,
+                    'original_language' => 'tr',
+                    'translated_content' => $messageContent,
+                    'type' => 'system',
+                    'priority' => 'medium',
+                    'is_read' => false,
+                ]);
+            }
+
+            return redirect()->route('guest.feedback')->with('success', 'Geri bildiriminiz başarıyla gönderildi ve yönetime iletildi.');
         } catch (\Exception $e) {
-            return redirect()->route('guest.feedback')->with('error', 'Geri bildirim gönderilirken bir hata oluştu.');
+            \Log::error('Geri bildirim gönderme hatası: ' . $e->getMessage(), [
+                'exception' => $e,
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
+            return redirect()->route('guest.feedback')->with('error', 'Geri bildirim gönderilirken bir hata oluştu: ' . $e->getMessage());
         }
     }
 
@@ -326,9 +411,10 @@ class GuestController extends Controller
                         ? \App\Services\TranslationService::translate($validated['content'], $staffLanguage, $detectedLanguage)
                         : $validated['content'];
 
-                    Message::create([
+                    $message = Message::create([
                         'hotel_id' => $hotelId,
-                        'from_user_id' => $user->id,
+                        'sender_id' => $user->id, // sender_id direkt kullan
+                        'from_user_id' => $user->id, // from_user_id de set et (model map ediyor)
                         'to_user_id' => $targetStaff->id,
                         'subject' => $validated['subject'] ?? 'Misafir Mesajı (Oda: ' . $activeStay->room->room_number . ')',
                         'content' => $translatedContent,
@@ -339,79 +425,30 @@ class GuestController extends Controller
                         'priority' => 'medium',
                         'is_read' => false,
                     ]);
+                    
+                    \Log::info('Guest message sent', [
+                        'message_id' => $message->id,
+                        'from_user_id' => $user->id,
+                        'to_user_id' => $targetStaff->id,
+                        'sender_id' => $message->sender_id ?? $message->attributes['sender_id'] ?? null,
+                        'content' => substr($translatedContent, 0, 50),
+                    ]);
+                    
                     $messageSent = true;
                 }
             }
 
-            // Eğer oda sorumlusuna mesaj gönderilemediyse, tüm personellere gönder
+            // Eğer odaya atanmış personel yoksa hata ver
             if (!$messageSent) {
-                $staffMembers = User::where('hotel_id', $hotelId)
-                    ->whereHas('roles', function($q) {
-                        $q->where('name', 'personel');
-                    })
-                    ->get();
-
-                if ($staffMembers->isEmpty()) {
-                    // Personel yoksa yöneticiye gönder
-                    $admin = User::where('hotel_id', $hotelId)
-                        ->whereHas('roles', function($q) {
-                            $q->whereIn('name', ['superadmin', 'müdür']);
-                        })
-                        ->first();
-
-                    if ($admin) {
-                        $adminLanguage = $admin->language ?? 'tr';
-                        
-                        // Admin'in diline çevir
-                        $translatedContent = $adminLanguage !== $detectedLanguage 
-                            ? \App\Services\TranslationService::translate($validated['content'], $adminLanguage, $detectedLanguage)
-                            : $validated['content'];
-
-                        Message::create([
-                            'hotel_id' => $hotelId,
-                            'from_user_id' => $user->id,
-                            'to_user_id' => $admin->id,
-                            'subject' => $validated['subject'] ?? 'Misafir Mesajı',
-                            'content' => $translatedContent,
-                            'original_content' => $validated['content'],
-                            'original_language' => $detectedLanguage,
-                            'translated_content' => $translatedContent,
-                            'type' => 'guest',
-                            'priority' => 'medium',
-                            'is_read' => false,
-                        ]);
-                        $messageSent = true;
-                    }
-                } else {
-                    // Her personel için mesaj oluştur ve kendi diline çevir
-                    foreach ($staffMembers as $staff) {
-                        $staffLanguage = $staff->language ?? 'tr';
-                        
-                        // Personelin diline çevir
-                        $translatedContent = $staffLanguage !== $detectedLanguage 
-                            ? \App\Services\TranslationService::translate($validated['content'], $staffLanguage, $detectedLanguage)
-                            : $validated['content'];
-
-                        Message::create([
-                            'hotel_id' => $hotelId,
-                            'from_user_id' => $user->id,
-                            'to_user_id' => $staff->id,
-                            'subject' => $validated['subject'] ?? 'Misafir Mesajı',
-                            'content' => $translatedContent,
-                            'original_content' => $validated['content'],
-                            'original_language' => $detectedLanguage,
-                            'translated_content' => $translatedContent,
-                            'type' => 'guest',
-                            'priority' => 'medium',
-                            'is_read' => false,
-                        ]);
-                        $messageSent = true;
-                    }
+                if (!$activeStay || !$activeStay->room) {
+                    return redirect()->route('guest.chat')->with('error', 'Mesaj gönderilemedi. Aktif bir oda rezervasyonunuz bulunmamaktadır.');
                 }
-            }
-
-            if (!$messageSent) {
-                return redirect()->route('guest.chat')->with('error', 'Mesaj gönderilemedi. Personel veya yönetici bulunamadı.');
+                
+                if (!$activeStay->room->assigned_staff_id) {
+                    return redirect()->route('guest.chat')->with('error', 'Mesaj gönderilemedi. Odanıza henüz personel atanmamış. Lütfen resepsiyon ile iletişime geçin.');
+                }
+                
+                return redirect()->route('guest.chat')->with('error', 'Mesaj gönderilemedi. Lütfen tekrar deneyin.');
             }
 
             return redirect()->route('guest.chat')->with('success', 'Mesajınız başarıyla gönderildi.');
@@ -438,18 +475,47 @@ class GuestController extends Controller
         ]);
 
         try {
+            // Misafirin aktif oda rezervasyonunu kontrol et
+            $activeStay = GuestStay::where('user_id', $user->id)
+                ->where('status', 'checked_in')
+                ->with('room.assignedStaff')
+                ->first();
+
+            if (!$activeStay || !$activeStay->room) {
+                return redirect()->route('guest.requests')->with('error', 'Talep gönderilemedi. Aktif bir oda rezervasyonunuz bulunmamaktadır.');
+            }
+
+            // Odaya atanmış personel var mı kontrol et
+            $assignedStaffId = null;
+            if ($activeStay->room->assigned_staff_id) {
+                $assignedStaff = User::find($activeStay->room->assigned_staff_id);
+                if ($assignedStaff && $assignedStaff->hotel_id == $hotelId && $assignedStaff->hasRole('personel')) {
+                    $assignedStaffId = $assignedStaff->id;
+                }
+            }
+
+            if (!$assignedStaffId) {
+                return redirect()->route('guest.requests')->with('error', 'Talep gönderilemedi. Odanıza henüz personel atanmamış. Lütfen resepsiyon ile iletişime geçin.');
+            }
+
             GuestRequest::create([
                 'hotel_id' => $hotelId,
                 'user_id' => $user->id,
-                'type' => $validated['type'],
+                'category' => $validated['type'], // type -> category mapping
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'priority' => $validated['priority'] ?? 'medium',
-                'status' => 'pending',
+                'status' => 'in_progress',
+                'assigned_to' => $assignedStaffId,
             ]);
 
-            return redirect()->route('guest.requests')->with('success', 'Talebiniz başarıyla gönderildi.');
+            return redirect()->route('guest.requests')->with('success', 'Talebiniz başarıyla gönderildi ve odanıza atanmış personele iletildi.');
         } catch (\Exception $e) {
+            \Log::error('Talep gönderme hatası (Guest): ' . $e->getMessage(), [
+                'exception' => $e,
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
             return redirect()->route('guest.requests')->with('error', 'Talep gönderilirken bir hata oluştu.');
         }
     }

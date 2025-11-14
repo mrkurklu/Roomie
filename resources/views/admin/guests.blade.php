@@ -38,6 +38,11 @@
             document.getElementById('create_guest_modal').classList.remove('hidden');
         });
 
+        // Validation hataları varsa modal'ı açık tut
+        @if($errors->any() && old('_token'))
+            document.getElementById('create_guest_modal')?.classList.remove('hidden');
+        @endif
+
         // Modal kapatma
         document.querySelectorAll('[data-close-modal]').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -279,29 +284,49 @@
         </div>
         <form action="{{ route('admin.guests.create') }}" method="POST">
             @csrf
+            
+            @if($errors->any())
+            <div class="mb-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                <ul class="list-disc list-inside text-sm text-red-800 dark:text-red-200">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+            
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">İsim *</label>
-                <input type="text" name="name" required maxlength="255" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="Misafir adı soyadı">
+                <input type="text" name="name" value="{{ old('name') }}" required maxlength="255" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm @error('name') border-red-500 @enderror" placeholder="Misafir adı soyadı">
+                @error('name')
+                    <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">E-posta *</label>
-                <input type="email" name="email" required class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="misafir@example.com">
+                <input type="email" name="email" value="{{ old('email') }}" required class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm @error('email') border-red-500 @enderror" placeholder="misafir@example.com">
+                @error('email')
+                    <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">TC Kimlik No *</label>
-                <input type="text" name="tc_no" required maxlength="11" minlength="11" pattern="[0-9]{11}" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" placeholder="11 haneli TC numarası">
+                <input type="text" name="tc_no" value="{{ old('tc_no') }}" required maxlength="11" minlength="11" pattern="[0-9]{11}" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm @error('tc_no') border-red-500 @enderror" placeholder="11 haneli TC numarası">
                 <p class="text-xs text-muted-foreground mt-1">TC numarası şifre olarak kullanılacaktır.</p>
+                @error('tc_no')
+                    <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">Oda *</label>
-                <select name="room_id" required class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                <select name="room_id" required class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm @error('room_id') border-red-500 @enderror">
                     <option value="">Oda seçin</option>
                     @foreach($rooms ?? [] as $room)
                         @if($room->status === 'available' || $room->status === 'occupied')
-                            <option value="{{ $room->id }}">
+                            <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
                                 Oda {{ $room->room_number }}
                                 @if($room->roomType)
                                     - {{ $room->roomType->name }}
@@ -314,21 +339,24 @@
                     @endforeach
                 </select>
                 <p class="text-xs text-muted-foreground mt-1">Misafir seçilen odaya otomatik olarak check-in yapılır.</p>
+                @error('room_id')
+                    <p class="text-xs text-red-600 dark:text-red-400 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">Dil</label>
                 <select name="language" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option value="tr">Türkçe</option>
-                    <option value="en">English</option>
-                    <option value="de">Deutsch</option>
-                    <option value="fr">Français</option>
-                    <option value="es">Español</option>
-                    <option value="it">Italiano</option>
-                    <option value="ru">Русский</option>
-                    <option value="ar">العربية</option>
-                    <option value="zh">中文</option>
-                    <option value="ja">日本語</option>
+                    <option value="tr" {{ old('language', 'tr') == 'tr' ? 'selected' : '' }}>Türkçe</option>
+                    <option value="en" {{ old('language') == 'en' ? 'selected' : '' }}>English</option>
+                    <option value="de" {{ old('language') == 'de' ? 'selected' : '' }}>Deutsch</option>
+                    <option value="fr" {{ old('language') == 'fr' ? 'selected' : '' }}>Français</option>
+                    <option value="es" {{ old('language') == 'es' ? 'selected' : '' }}>Español</option>
+                    <option value="it" {{ old('language') == 'it' ? 'selected' : '' }}>Italiano</option>
+                    <option value="ru" {{ old('language') == 'ru' ? 'selected' : '' }}>Русский</option>
+                    <option value="ar" {{ old('language') == 'ar' ? 'selected' : '' }}>العربية</option>
+                    <option value="zh" {{ old('language') == 'zh' ? 'selected' : '' }}>中文</option>
+                    <option value="ja" {{ old('language') == 'ja' ? 'selected' : '' }}>日本語</option>
                 </select>
             </div>
 

@@ -24,7 +24,7 @@
     @stack('scripts')
 </head>
 <body class="font-sans antialiased">
-    <div class="min-h-screen bg-background-light dark:bg-background-dark text-foreground pb-24 md:pb-6">
+    <div class="min-h-screen bg-white dark:bg-background-dark text-foreground pb-24 md:pb-6">
         @if(($role ?? 'Yönetim') === 'Misafir')
             @include('layouts.portal.topbar-guest')
         @else

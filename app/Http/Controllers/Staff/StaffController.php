@@ -12,11 +12,78 @@ use App\Models\Event;
 use App\Models\GuestStay;
 use App\Models\User;
 use App\Models\Room;
+use App\Models\Request as GuestRequest;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class StaffController extends Controller
 {
+    public function dashboard()
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        if (!$hotelId) {
+            return view('staff.dashboard', [
+                'role' => 'Personel',
+                'activeTab' => 'dashboard',
+                'unreadMessages' => collect([]),
+                'tasks' => collect([]),
+                'stats' => [
+                    'unread_messages' => 0,
+                    'pending_tasks' => 0,
+                    'in_progress_tasks' => 0,
+                ],
+            ]);
+        }
+
+        // Okunmamış mesajlar (uyarı olarak)
+        $unreadMessages = Message::where('hotel_id', $hotelId)
+            ->where('to_user_id', $user->id)
+            ->where(function($q) {
+                $q->whereNull('is_read')->orWhere('is_read', false);
+            })
+            ->with(['fromUser'])
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        // Atanan görevler
+        $tasks = Task::where('hotel_id', $hotelId)
+            ->where('assigned_to', $user->id)
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->with(['createdBy', 'assignedTo'])
+            ->orderBy('priority', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        $stats = [
+            'unread_messages' => Message::where('hotel_id', $hotelId)
+                ->where('to_user_id', $user->id)
+                ->where(function($q) {
+                    $q->whereNull('is_read')->orWhere('is_read', false);
+                })
+                ->count(),
+            'pending_tasks' => Task::where('hotel_id', $hotelId)
+                ->where('assigned_to', $user->id)
+                ->where('status', 'pending')
+                ->count(),
+            'in_progress_tasks' => Task::where('hotel_id', $hotelId)
+                ->where('assigned_to', $user->id)
+                ->where('status', 'in_progress')
+                ->count(),
+        ];
+
+        return view('staff.dashboard', [
+            'role' => 'Personel',
+            'activeTab' => 'dashboard',
+            'unreadMessages' => $unreadMessages,
+            'tasks' => $tasks,
+            'stats' => $stats,
+        ]);
+    }
+
     public function tasks()
     {
         $user = auth()->user();
@@ -85,6 +152,14 @@ class StaffController extends Controller
         $user = auth()->user();
         $hotelId = $user->hotel_id;
 
+        // Misafir talepleri (GuestRequest)
+        $guestRequests = GuestRequest::where('hotel_id', $hotelId)
+            ->where('assigned_to', $user->id)
+            ->with(['user', 'assignedTo'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        // Bakım talepleri (Ticket)
         $tickets = Ticket::where('hotel_id', $hotelId)
             ->where(function($q) use ($user) {
                 $q->where('created_by', $user->id)
@@ -95,38 +170,29 @@ class StaffController extends Controller
             ->paginate(15);
 
         $stats = [
-            'total' => Ticket::where('hotel_id', $hotelId)
-                ->where(function($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
-                })
+            'total_guest_requests' => GuestRequest::where('hotel_id', $hotelId)
+                ->where('assigned_to', $user->id)
                 ->count(),
-            'open' => Ticket::where('hotel_id', $hotelId)
-                ->where(function($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
-                })
-                ->where('status', 'open')
-                ->count(),
-            'in_progress' => Ticket::where('hotel_id', $hotelId)
-                ->where(function($q) use ($user) {
-                    $q->where('created_by', $user->id)
-                      ->orWhere('assigned_to', $user->id);
-                })
+            'in_progress_guest_requests' => GuestRequest::where('hotel_id', $hotelId)
+                ->where('assigned_to', $user->id)
                 ->where('status', 'in_progress')
                 ->count(),
-            'resolved' => Ticket::where('hotel_id', $hotelId)
+            'completed_guest_requests' => GuestRequest::where('hotel_id', $hotelId)
+                ->where('assigned_to', $user->id)
+                ->where('status', 'completed')
+                ->count(),
+            'total_tickets' => Ticket::where('hotel_id', $hotelId)
                 ->where(function($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhere('assigned_to', $user->id);
                 })
-                ->where('status', 'resolved')
                 ->count(),
         ];
 
         return view('staff.tickets', [
             'role' => 'Personel',
             'activeTab' => 'tickets',
+            'guestRequests' => $guestRequests,
             'tickets' => $tickets,
             'stats' => $stats,
         ]);
@@ -176,7 +242,7 @@ class StaffController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->unique(function($message) use ($user) {
-                    $senderId = $message->attributes['sender_id'] ?? $message->from_user_id;
+                    $senderId = $message->sender_id ?? $message->from_user_id ?? ($message->attributes['sender_id'] ?? null);
                     if ($senderId == $user->id) {
                         return $message->to_user_id;
                     } else {
@@ -188,8 +254,8 @@ class StaffController extends Controller
 
         // Mesajları kullanıcının diline göre çevir
         $messages = $messages->transform(function($message) use ($userLanguage, $user) {
-            // sender_id'yi kontrol ediyoruz çünkü veritabanında bu kolon var
-            $senderId = $message->attributes['sender_id'] ?? $message->from_user_id;
+            // sender_id veya from_user_id kullan (model'de map ediliyor)
+            $senderId = $message->sender_id ?? $message->from_user_id ?? ($message->attributes['sender_id'] ?? null);
             if ($senderId == $user->id) {
                 $message->display_content = $message->original_content ?? $message->content;
             } else {
@@ -230,7 +296,7 @@ class StaffController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function($message) use ($user) {
-                    $senderId = $message->attributes['sender_id'] ?? $message->from_user_id;
+                    $senderId = $message->sender_id ?? $message->from_user_id ?? ($message->attributes['sender_id'] ?? null);
                     if ($senderId == $user->id) {
                         return $message->toUser;
                     } else {
@@ -295,6 +361,34 @@ class StaffController extends Controller
         }
     }
 
+    public function updateGuestRequestStatus(Request $request, GuestRequest $guestRequest)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        // Sadece kendisine atanmış talepleri güncelleyebilir
+        if ($guestRequest->hotel_id !== $hotelId || $guestRequest->assigned_to !== $user->id) {
+            return redirect()->route('staff.tickets')->with('error', 'Bu talebi güncelleyemezsiniz.');
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,in_progress,completed',
+        ]);
+
+        try {
+            $guestRequest->status = $validated['status'];
+            if ($validated['status'] === 'completed') {
+                $guestRequest->completed_at = now();
+            }
+            $guestRequest->save();
+
+            return redirect()->route('staff.tickets')->with('success', 'Talep durumu güncellendi.');
+        } catch (\Exception $e) {
+            \Log::error('Talep durumu güncelleme hatası: ' . $e->getMessage());
+            return redirect()->route('staff.tickets')->with('error', 'Talep durumu güncellenirken bir hata oluştu.');
+        }
+    }
+
     public function updateTicketStatus(Request $request, Ticket $ticket)
     {
         $validated = $request->validate([
@@ -356,15 +450,17 @@ class StaffController extends Controller
                 ? \App\Services\TranslationService::translate($validated['content'], $toUserLanguage, $detectedLanguage)
                 : $validated['content'];
 
-            // type değerini kontrol et ve geçerli değerlerden biri olduğundan emin ol
-            $messageType = $validated['type'] ?? 'internal';
+            // Alıcı misafir ise type'ı guest yap
+            $isGuest = $toUser->hasRole('misafir') || $toUser->hasRole('guest');
+            $messageType = $validated['type'] ?? ($isGuest ? 'guest' : 'internal');
             if (!in_array($messageType, ['internal', 'guest', 'system'])) {
-                $messageType = 'internal';
+                $messageType = $isGuest ? 'guest' : 'internal';
             }
 
-            Message::create([
+            $message = Message::create([
                 'hotel_id' => $hotelId,
-                'from_user_id' => $user->id,
+                'sender_id' => $user->id, // sender_id direkt kullan
+                'from_user_id' => $user->id, // from_user_id de set et (model map ediyor)
                 'to_user_id' => $validated['to_user_id'],
                 'subject' => $validated['subject'] ?? null,
                 'content' => $translatedContent,
@@ -374,6 +470,16 @@ class StaffController extends Controller
                 'type' => $messageType,
                 'priority' => $validated['priority'] ?? 'medium',
                 'is_read' => false,
+            ]);
+            
+            \Log::info('Staff message sent', [
+                'message_id' => $message->id,
+                'from_user_id' => $user->id,
+                'to_user_id' => $validated['to_user_id'],
+                'to_user_is_guest' => $isGuest,
+                'type' => $messageType,
+                'sender_id' => $message->sender_id ?? $message->attributes['sender_id'] ?? null,
+                'content' => substr($translatedContent, 0, 50),
             ]);
 
             return redirect()->route('staff.inbox', ['to_user_id' => $validated['to_user_id']])->with('success', 'Mesaj başarıyla gönderildi.');
@@ -585,3 +691,4 @@ class StaffController extends Controller
         }
     }
 }
+

@@ -1,6 +1,6 @@
 @extends('layouts.portal')
 
-@section('title', 'Vardiya - Personel Paneli')
+@section('title', 'Mesai Programı - Personel Paneli')
 
 @push('scripts')
 <script>
@@ -21,7 +21,7 @@
     <div class="col-span-12 lg:col-span-5">
         <x-ui.card class="border-none shadow-sm">
             <x-ui.card-header class="pb-2">
-                <x-ui.card-title>Vardiya Takvimi</x-ui.card-title>
+                <x-ui.card-title>Mesai Takvimi</x-ui.card-title>
             </x-ui.card-header>
             <x-ui.card-content>
                 <div class="space-y-3">
@@ -41,7 +41,7 @@
                         @endif
                     </div>
                     @empty
-                    <div class="text-sm text-muted-foreground text-center py-8">Henüz vardiya yok</div>
+                    <div class="text-sm text-muted-foreground text-center py-8">Henüz mesai programı yok</div>
                     @endforelse
                 </div>
             </x-ui.card-content>
@@ -50,7 +50,7 @@
     <div class="col-span-12 lg:col-span-7">
         <x-ui.card class="border-none shadow-sm">
             <x-ui.card-header class="pb-2">
-                <x-ui.card-title>Yaklaşan Vardiyalar</x-ui.card-title>
+                <x-ui.card-title>Yaklaşan Mesailer</x-ui.card-title>
             </x-ui.card-header>
             <x-ui.card-content class="space-y-3">
                 @forelse($upcomingSchedules ?? [] as $schedule)
@@ -60,7 +60,7 @@
                     </div>
                     <div class="flex-1">
                         <div class="font-medium">{{ \Carbon\Carbon::parse($schedule->date)->format('d.m.Y') }}</div>
-                        <div class="text-xs text-muted-foreground">{{ ucfirst($schedule->shift_type) }} Vardiya</div>
+                        <div class="text-xs text-muted-foreground">{{ ucfirst($schedule->shift_type) }} Mesai</div>
                     </div>
                     <x-ui.badge variant="secondary" class="mr-2">
                         <i data-lucide="clock" class="w-3 h-3 mr-1"></i>
@@ -73,7 +73,7 @@
                     @endif
                 </div>
                 @empty
-                <div class="text-sm text-muted-foreground text-center py-8">Yaklaşan vardiya yok</div>
+                <div class="text-sm text-muted-foreground text-center py-8">Yaklaşan mesai yok</div>
                 @endforelse
             </x-ui.card-content>
         </x-ui.card>

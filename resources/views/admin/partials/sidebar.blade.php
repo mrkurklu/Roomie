@@ -42,6 +42,10 @@
                 <i data-lucide="calendar" class="w-4 h-4"></i>
                 <span>Etkinlikler</span>
             </a>
+            <a href="{{ route('admin.feedbacks') }}" class="flex items-center gap-2.5 w-full px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ $active === 'feedbacks' ? 'bg-primary-light dark:bg-primary-dark text-white shadow-md' : 'bg-transparent hover:bg-primary-light/10 dark:hover:bg-primary-dark/10 text-text-light dark:text-text-dark hover:text-primary-light dark:hover:text-primary-dark' }}">
+                <i data-lucide="message-square-heart" class="w-4 h-4"></i>
+                <span>Geri Bildirimler</span>
+            </a>
             <a href="{{ route('admin.settings') }}" class="flex items-center gap-2.5 w-full px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ $active === 'settings' ? 'bg-primary-light dark:bg-primary-dark text-white shadow-md' : 'bg-transparent hover:bg-primary-light/10 dark:hover:bg-primary-dark/10 text-text-light dark:text-text-dark hover:text-primary-light dark:hover:text-primary-dark' }}">
                 <i data-lucide="settings" class="w-4 h-4"></i>
                 <span>{{ __('settings') }}</span>

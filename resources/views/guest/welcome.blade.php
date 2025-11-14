@@ -17,7 +17,7 @@
 @endsection
 
 @section('content')
-<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-white dark:bg-background-dark font-display">
     <div class="layout-container flex h-full grow flex-col">
         <div class="px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 2xl:px-24 flex flex-1 justify-center py-4 sm:py-5 md:py-6">
             <div class="layout-content-container flex flex-col w-full max-w-[1200px] flex-1">

@@ -24,5 +24,10 @@ class Event extends Model
     {
         return $this->belongsTo(Hotel::class);
     }
+
+    public function images()
+    {
+        return $this->hasMany(EventImage::class)->orderBy('order');
+    }
 }
 

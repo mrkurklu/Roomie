@@ -11,7 +11,7 @@ class Request extends Model
 
     protected $fillable = [
         'hotel_id', 'user_id', 'guest_name', 'guest_room',
-        'title', 'description', 'category', 'priority', 'status', 'completed_at'
+        'title', 'description', 'category', 'priority', 'status', 'completed_at', 'assigned_to'
     ];
 
     protected $casts = [
@@ -26,6 +26,11 @@ class Request extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function assignedTo()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 }
 

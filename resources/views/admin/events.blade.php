@@ -8,6 +8,91 @@
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
+
+        const dropZone = document.getElementById('drop-zone');
+        const imageInput = document.getElementById('image-input');
+        const imagePreview = document.getElementById('image-preview');
+        const uploadArea = document.getElementById('image-upload-area');
+        let selectedFiles = [];
+
+        // Dosya seçme
+        imageInput.addEventListener('change', function(e) {
+            handleFiles(Array.from(e.target.files));
+        });
+
+        // Sürükle-bırak
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('border-primary-light', 'dark:border-primary-dark', 'bg-primary-light/5', 'dark:bg-primary-dark/5');
+        });
+
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('border-primary-light', 'dark:border-primary-dark', 'bg-primary-light/5', 'dark:bg-primary-dark/5');
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('border-primary-light', 'dark:border-primary-dark', 'bg-primary-light/5', 'dark:bg-primary-dark/5');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            handleFiles(files);
+        });
+
+        function handleFiles(files) {
+            files.forEach(file => {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`${file.name} dosyası çok büyük. Maksimum 5MB olmalıdır.`);
+                    return;
+                }
+                selectedFiles.push(file);
+                previewImage(file);
+            });
+            updateFileInput();
+        }
+
+        function previewImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'relative group';
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="${file.name}" class="w-full h-32 object-cover rounded-lg">
+                    <button type="button" onclick="removeImage('${file.name}')" class="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">${file.name}</p>
+                `;
+                imagePreview.appendChild(div);
+                imagePreview.classList.remove('hidden');
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage(fileName) {
+            selectedFiles = selectedFiles.filter(f => f.name !== fileName);
+            updateFileInput();
+            updatePreview();
+        }
+
+        function updateFileInput() {
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            imageInput.files = dt.files;
+        }
+
+        function updatePreview() {
+            imagePreview.innerHTML = '';
+            if (selectedFiles.length === 0) {
+                imagePreview.classList.add('hidden');
+            } else {
+                selectedFiles.forEach(file => previewImage(file));
+            }
+        }
+
+        window.removeImage = removeImage;
     });
 </script>
 @endpush
@@ -33,7 +118,7 @@
         <x-ui.card-title class="text-text-light dark:text-text-dark">Yeni Etkinlik Ekle</x-ui.card-title>
     </x-ui.card-header>
     <x-ui.card-content>
-        <form method="POST" action="{{ route('admin.events.store') }}" class="space-y-4">
+        <form method="POST" action="{{ route('admin.events.store') }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-2">
@@ -56,9 +141,20 @@
                     <label class="text-sm font-medium text-text-light dark:text-text-dark">Konum</label>
                     <x-ui.input name="location" placeholder="Etkinlik konumu" />
                 </div>
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-text-light dark:text-text-dark">Görsel Yolu</label>
-                    <x-ui.input name="image_path" placeholder="storage/events/image.jpg" />
+            </div>
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-text-light dark:text-text-dark">Görseller</label>
+                <div id="image-upload-area" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-primary-light dark:hover:border-primary-dark transition-colors">
+                    <input type="file" name="images[]" id="image-input" multiple accept="image/*" class="hidden">
+                    <div id="drop-zone" class="cursor-pointer">
+                        <i data-lucide="image" class="w-12 h-12 mx-auto mb-4 text-gray-400 dark:text-gray-500"></i>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            <span class="text-primary-light dark:text-primary-dark font-medium">Dosyaları sürükleyip bırakın</span> veya
+                            <button type="button" onclick="document.getElementById('image-input').click()" class="text-primary-light dark:text-primary-dark font-medium hover:underline">dosyalardan seçin</button>
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-500">Birden fazla görsel seçebilirsiniz (JPEG, PNG, JPG, GIF, WEBP - Max 5MB)</p>
+                    </div>
+                    <div id="image-preview" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 hidden"></div>
                 </div>
             </div>
             <div class="space-y-2">

@@ -125,21 +125,21 @@
         
         <x-ui.card-content class="flex-1 flex flex-col p-0 overflow-hidden">
             <!-- Messages Container -->
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-background-light dark:bg-background-dark">
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-white dark:bg-gray-900/20">
                 @if(!$chatUser && isset($chatUsers) && $chatUsers->count() > 0)
                     <!-- Kullanıcı Listesi -->
                     <div class="space-y-2">
-                        <p class="text-sm text-text-light/70 dark:text-text-dark/70 mb-3">Mesajlaşma geçmişi olan kullanıcılar:</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Mesajlaşma geçmişi olan kullanıcılar:</p>
                         @foreach($chatUsers as $userItem)
                             <a href="{{ route('staff.inbox', ['to_user_id' => $userItem->id]) }}" class="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-surface-dark border border-primary-light/10 dark:border-primary-dark/10 hover:bg-primary-light/5 dark:hover:bg-primary-dark/10 transition-all">
                                 <div class="w-10 h-10 rounded-full bg-primary-light/20 dark:bg-primary-dark/20 flex items-center justify-center">
                                     <span class="text-sm font-medium text-primary-light dark:text-primary-dark">{{ strtoupper(substr($userItem->name ?? 'U', 0, 2)) }}</span>
                                 </div>
                                 <div class="flex-1">
-                                    <div class="text-sm font-medium text-text-light dark:text-text-dark">{{ $userItem->name ?? 'Kullanıcı' }}</div>
-                                    <div class="text-xs text-text-light/60 dark:text-text-dark/60">{{ $userItem->email ?? '' }}</div>
+                                    <div class="text-sm font-medium text-gray-800 dark:text-text-dark">{{ $userItem->name ?? 'Kullanıcı' }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ $userItem->email ?? '' }}</div>
                                 </div>
-                                <i data-lucide="chevron-right" class="w-4 h-4 text-text-light/50 dark:text-text-dark/50"></i>
+                                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 dark:text-gray-500"></i>
                             </a>
                         @endforeach
                     </div>
@@ -149,8 +149,8 @@
                     @endphp
                     @forelse($messages ?? [] as $message)
                     @php
-                        // sender_id'yi kontrol ediyoruz çünkü veritabanında bu kolon var
-                        $senderId = $message->attributes['sender_id'] ?? $message->from_user_id;
+                        // sender_id veya from_user_id kullan (model'de map ediliyor)
+                        $senderId = $message->sender_id ?? $message->from_user_id ?? ($message->attributes['sender_id'] ?? null);
                         $isFromMe = $senderId == auth()->id();
                         $displayName = $isFromMe ? 'Siz' : ($message->fromUser->name ?? 'Kullanıcı');
                         $displayContent = $message->display_content ?? $message->content;
@@ -163,18 +163,18 @@
                     
                     @if($showDate)
                         <div class="flex justify-center my-4">
-                            <span class="text-xs text-text-light/50 dark:text-text-dark/50 bg-white dark:bg-surface-dark border border-primary-light/10 dark:border-primary-dark/10 px-3 py-1 rounded-full">{{ $date }}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-1 rounded-full">{{ $date }}</span>
                         </div>
                     @endif
                     
                     @if($isFromMe)
                         <div class="flex justify-end items-end gap-2 group">
                             <div class="flex flex-col items-end max-w-[75%]">
-                                <div class="text-xs text-text-light/50 dark:text-text-dark/50 mb-1 px-2">{{ $displayName }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 px-2">{{ $displayName }}</div>
                                 <div class="rounded-2xl rounded-br-md px-4 py-2.5 text-sm bg-primary-light dark:bg-primary-dark text-white shadow-md hover:shadow-lg transition-shadow">
                                     <div class="whitespace-pre-wrap break-words">{{ $displayContent }}</div>
                                 </div>
-                                <div class="text-xs text-text-light/40 dark:text-text-dark/40 mt-1 px-2">{{ $time }}</div>
+                                <div class="text-xs text-gray-400 dark:text-gray-500 mt-1 px-2">{{ $time }}</div>
                             </div>
                             <div class="w-8 h-8 rounded-full bg-primary-light/20 dark:bg-primary-dark/20 flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <i data-lucide="user" class="w-4 h-4 text-primary-light dark:text-primary-dark"></i>
@@ -182,25 +182,25 @@
                         </div>
                     @else
                         <div class="flex justify-start items-end gap-2 group">
-                            <div class="w-8 h-8 rounded-full bg-surface-light dark:bg-surface-dark flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <i data-lucide="user" class="w-4 h-4 text-text-light dark:text-text-dark"></i>
+                            <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-background-dark flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i data-lucide="user" class="w-4 h-4 text-gray-400 dark:text-gray-500"></i>
                             </div>
                             <div class="flex flex-col items-start max-w-[75%]">
-                                <div class="text-xs text-text-light/50 dark:text-text-dark/50 mb-1 px-2">{{ $displayName }}</div>
-                                <div class="rounded-2xl rounded-bl-md px-4 py-2.5 text-sm bg-surface-light dark:bg-surface-dark text-text-light dark:text-text-dark shadow-md hover:shadow-lg transition-shadow">
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 px-2">{{ $displayName }}</div>
+                                <div class="rounded-2xl rounded-bl-md px-4 py-2.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-md hover:shadow-lg transition-shadow border border-gray-100 dark:border-gray-700">
                                     <div class="whitespace-pre-wrap break-words">{{ $displayContent }}</div>
                                 </div>
-                                <div class="text-xs text-text-light/40 dark:text-text-dark/40 mt-1 px-2">{{ $time }}</div>
+                                <div class="text-xs text-gray-400 dark:text-gray-500 mt-1 px-2">{{ $time }}</div>
                             </div>
                         </div>
                     @endif
                 @empty
                     <div class="flex flex-col items-center justify-center h-full text-center py-12">
-                        <div class="w-16 h-16 rounded-full bg-surface-light dark:bg-surface-dark flex items-center justify-center mb-4">
-                            <i data-lucide="message-circle" class="w-8 h-8 text-text-light/30 dark:text-text-dark/30"></i>
+                        <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-background-dark flex items-center justify-center mb-4">
+                            <i data-lucide="message-circle" class="w-8 h-8 text-gray-400 dark:text-gray-500"></i>
                         </div>
-                        <p class="text-text-light/70 dark:text-text-dark/70 text-sm mb-1">Henüz mesaj yok</p>
-                        <p class="text-text-light/50 dark:text-text-dark/50 text-xs">İlk mesajınızı göndererek sohbete başlayın</p>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-1">Henüz mesaj yok</p>
+                        <p class="text-gray-500 dark:text-gray-500 text-xs">İlk mesajınızı göndererek sohbete başlayın</p>
                     </div>
                     @endforelse
                 @endif
@@ -222,7 +222,7 @@
             @if($chatUser || (isset($chatUsers) && $chatUsers->count() > 0 && !$chatUser))
             <div class="border-t border-primary-light/10 dark:border-primary-dark/10 p-4 bg-white dark:bg-surface-dark">
                 @if(!$chatUser)
-                    <p class="text-sm text-text-light/70 dark:text-text-dark/70 mb-3">Mesaj göndermek için yukarıdan bir kullanıcı seçin</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Mesaj göndermek için yukarıdan bir kullanıcı seçin</p>
                 @else
                 <form method="POST" action="{{ route('staff.inbox.store') }}" id="chat-form" class="flex gap-2">
                     @csrf
@@ -251,7 +251,7 @@
             </div>
             @else
             <div class="border-t border-primary-light/10 dark:border-primary-dark/10 p-4 bg-white dark:bg-surface-dark">
-                <p class="text-sm text-text-light/70 dark:text-text-dark/70 text-center">Henüz mesajlaşma geçmişi yok. İlk mesajınızı göndermek için bir kullanıcı seçin.</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Henüz mesajlaşma geçmişi yok. İlk mesajınızı göndermek için bir kullanıcı seçin.</p>
             </div>
             @endif
         </x-ui.card-content>
@@ -297,3 +297,4 @@
     }
 </style>
 @endsection
+

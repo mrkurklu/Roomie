@@ -29,7 +29,7 @@ class RedirectIfAuthenticated
                 if ($user->hasRole('superadmin') || $user->hasRole('müdür') || $user->hasRole('manager')) {
                     return redirect()->route('admin.dashboard');
                 } elseif ($user->hasRole('personel') || $user->hasRole('staff')) {
-                    return redirect()->route('staff.tasks');
+                    return redirect()->route('staff.dashboard');
                 } elseif ($user->hasRole('misafir') || $user->hasRole('guest')) {
                     return redirect()->route('guest.welcome');
                 }

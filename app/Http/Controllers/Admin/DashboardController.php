@@ -915,15 +915,14 @@ class DashboardController extends Controller
         $user = auth()->user();
         $hotelId = $user->hotel_id;
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'tc_no' => 'required|string|size:11|unique:users,tc_no|regex:/^[0-9]+$/',
-            'language' => 'nullable|string|max:10',
-            'room_id' => 'required|exists:rooms,id',
-        ]);
-
         try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'tc_no' => 'required|string|size:11|unique:users,tc_no|regex:/^[0-9]+$/',
+                'language' => 'nullable|string|max:10',
+                'room_id' => 'required|exists:rooms,id',
+            ]);
             // TC numarasını şifre olarak kullan
             $guest = User::create([
                 'name' => $validated['name'],
@@ -1045,9 +1044,15 @@ class DashboardController extends Controller
             }
             
             return redirect()->route('admin.guests')->with('success', 'Misafir başarıyla oluşturuldu ve Oda ' . $room->room_number . ' için check-in yapıldı.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Misafir oluşturma validation hatası', ['errors' => $e->errors()]);
+            return redirect()->back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
-            \Log::error('Misafir oluşturma hatası: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Misafir oluşturulurken bir hata oluştu: ' . $e->getMessage());
+            \Log::error('Misafir oluşturma hatası: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->back()->with('error', 'Misafir oluşturulurken bir hata oluştu: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -1314,15 +1319,17 @@ class DashboardController extends Controller
                 ? \App\Services\TranslationService::translate($validated['content'], $toUserLanguage, $detectedLanguage)
                 : $validated['content'];
 
-            // type değerini kontrol et ve geçerli değerlerden biri olduğundan emin ol
-            $messageType = $validated['type'] ?? 'internal';
+            // Alıcı misafir ise type'ı guest yap
+            $isGuest = $toUser->hasRole('misafir') || $toUser->hasRole('guest');
+            $messageType = $validated['type'] ?? ($isGuest ? 'guest' : 'internal');
             if (!in_array($messageType, ['internal', 'guest', 'system'])) {
-                $messageType = 'internal';
+                $messageType = $isGuest ? 'guest' : 'internal';
             }
 
-            Message::create([
+            $message = Message::create([
                 'hotel_id' => $hotelId,
-                'from_user_id' => $user->id,
+                'sender_id' => $user->id, // sender_id direkt kullan
+                'from_user_id' => $user->id, // from_user_id de set et (model map ediyor)
                 'to_user_id' => $validated['to_user_id'],
                 'subject' => $validated['subject'] ?? null,
                 'content' => $translatedContent,
@@ -1333,8 +1340,18 @@ class DashboardController extends Controller
                 'priority' => $validated['priority'] ?? 'medium',
                 'is_read' => false,
             ]);
+            
+            \Log::info('Admin message sent', [
+                'message_id' => $message->id,
+                'from_user_id' => $user->id,
+                'to_user_id' => $validated['to_user_id'],
+                'to_user_is_guest' => $isGuest,
+                'type' => $messageType,
+                'sender_id' => $message->sender_id ?? $message->attributes['sender_id'] ?? null,
+                'content' => substr($translatedContent, 0, 50),
+            ]);
 
-            return redirect()->route('admin.messages')->with('success', 'Mesaj başarıyla gönderildi.');
+            return redirect()->route('admin.messages', ['to_user_id' => $validated['to_user_id']])->with('success', 'Mesaj başarıyla gönderildi.');
         } catch (\Exception $e) {
             \Log::error('Mesaj gönderme hatası (Admin): ' . $e->getMessage(), [
                 'exception' => $e,
@@ -1536,23 +1553,37 @@ class DashboardController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after:start_date',
             'location' => 'nullable|string|max:255',
-            'image_path' => 'nullable|string|max:255',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'is_active' => 'nullable|boolean',
             'priority' => 'nullable|integer|min:0|max:100',
         ]);
 
         try {
-            Event::create([
+            $event = Event::create([
                 'hotel_id' => $hotelId,
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
                 'start_date' => $validated['start_date'],
                 'end_date' => $validated['end_date'] ?? null,
                 'location' => $validated['location'] ?? null,
-                'image_path' => $validated['image_path'] ?? null,
+                'image_path' => null, // Artık event_images tablosunda saklanacak
                 'is_active' => isset($validated['is_active']) ? (bool)$validated['is_active'] : true,
                 'priority' => $validated['priority'] ?? 0,
             ]);
+
+            // Görselleri yükle
+            if ($request->hasFile('images')) {
+                $order = 0;
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('events', 'public');
+                    \App\Models\EventImage::create([
+                        'event_id' => $event->id,
+                        'image_path' => 'storage/' . $path,
+                        'order' => $order++,
+                    ]);
+                }
+            }
 
             return redirect()->route('admin.events')->with('success', 'Etkinlik başarıyla oluşturuldu.');
         } catch (\Exception $e) {
@@ -1619,6 +1650,79 @@ class DashboardController extends Controller
             return redirect()->route('admin.events')->with('success', 'Etkinlik başarıyla silindi.');
         } catch (\Exception $e) {
             return redirect()->route('admin.events')->with('error', 'Etkinlik silinirken bir hata oluştu.');
+        }
+    }
+
+    public function feedbacks()
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        if (!$hotelId) {
+            return view('admin.feedbacks', [
+                'role' => 'Yönetim',
+                'activeTab' => 'feedbacks',
+                'feedbacks' => collect([]),
+                'stats' => [
+                    'total' => 0,
+                    'average_rating' => 0,
+                    'unresponded' => 0,
+                ],
+            ]);
+        }
+
+        $feedbacks = Feedback::where('hotel_id', $hotelId)
+            ->with(['user'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        $stats = [
+            'total' => Feedback::where('hotel_id', $hotelId)->count(),
+            'average_rating' => Feedback::where('hotel_id', $hotelId)->avg('rating') ?? 0,
+            'unresponded' => Feedback::where('hotel_id', $hotelId)->where('is_responded', false)->count(),
+        ];
+
+        return view('admin.feedbacks', [
+            'role' => 'Yönetim',
+            'activeTab' => 'feedbacks',
+            'feedbacks' => $feedbacks,
+            'stats' => $stats,
+        ]);
+    }
+
+    public function updateFeedback(Request $request, Feedback $feedback)
+    {
+        $user = auth()->user();
+        $hotelId = $user->hotel_id;
+
+        if ($feedback->hotel_id !== $hotelId) {
+            return redirect()->route('admin.feedbacks')->with('error', 'Bu geri bildirimi güncelleyemezsiniz.');
+        }
+
+        $validated = $request->validate([
+            'is_responded' => 'nullable|boolean',
+            'is_public' => 'nullable|boolean',
+        ]);
+
+        try {
+            if (isset($validated['is_responded'])) {
+                $feedback->is_responded = $validated['is_responded'];
+            }
+            if (isset($validated['is_public'])) {
+                $feedback->is_public = $validated['is_public'];
+            }
+            $feedback->save();
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true]);
+            }
+            return redirect()->route('admin.feedbacks')->with('success', 'Geri bildirim güncellendi.');
+        } catch (\Exception $e) {
+            \Log::error('Geri bildirim güncelleme hatası: ' . $e->getMessage());
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+            }
+            return redirect()->route('admin.feedbacks')->with('error', 'Geri bildirim güncellenirken bir hata oluştu.');
         }
     }
 }

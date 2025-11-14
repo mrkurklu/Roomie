@@ -67,15 +67,19 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('/events', [DashboardController::class, 'storeEvent'])->name('admin.events.store');
     Route::patch('/events/{event}', [DashboardController::class, 'updateEvent'])->name('admin.events.update');
     Route::delete('/events/{event}', [DashboardController::class, 'deleteEvent'])->name('admin.events.delete');
+    Route::get('/feedbacks', [DashboardController::class, 'feedbacks'])->name('admin.feedbacks');
+    Route::patch('/feedbacks/{feedback}', [DashboardController::class, 'updateFeedback'])->name('admin.feedbacks.update');
 });
 
 // --- PERSONEL PANELİ ROTALARI ---
 Route::prefix('staff')->middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('staff.dashboard');
     Route::get('/tasks', [StaffController::class, 'tasks'])->name('staff.tasks');
     Route::patch('/tasks/{task}/status', [StaffController::class, 'updateTaskStatus'])->name('staff.tasks.updateStatus');
     Route::get('/schedule', [StaffController::class, 'schedule'])->name('staff.schedule');
     Route::get('/tickets', [StaffController::class, 'tickets'])->name('staff.tickets');
     Route::patch('/tickets/{ticket}/status', [StaffController::class, 'updateTicketStatus'])->name('staff.tickets.updateStatus');
+    Route::patch('/guest-requests/{guestRequest}/status', [StaffController::class, 'updateGuestRequestStatus'])->name('staff.guest-requests.updateStatus');
     Route::get('/inbox', [StaffController::class, 'inbox'])->name('staff.inbox');
     Route::post('/inbox', [StaffController::class, 'storeMessage'])->name('staff.inbox.store');
     Route::get('/resources', [StaffController::class, 'resources'])->name('staff.resources');

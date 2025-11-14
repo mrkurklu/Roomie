@@ -52,6 +52,8 @@ class LoginRequest extends FormRequest
         if (!$authenticated) {
             $user = \App\Models\User::where('tc_no', $email)->first();
             if ($user && \Hash::check($password, $user->password)) {
+                // Misafirler için şifre TC numarası olarak ayarlanmıştır
+                // Kullanıcı TC numarasını şifre olarak girdiğinde Hash::check çalışır
                 Auth::login($user, $this->boolean('remember'));
                 $authenticated = true;
             }

@@ -39,6 +39,14 @@ class Message extends Model
     }
 
     /**
+     * sender_id accessor
+     */
+    public function getSenderIdAttribute()
+    {
+        return isset($this->attributes['sender_id']) ? $this->attributes['sender_id'] : null;
+    }
+
+    /**
      * content attribute'unu message kolonuna map et
      */
     public function setContentAttribute($value)

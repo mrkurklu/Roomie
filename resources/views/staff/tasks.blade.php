@@ -55,61 +55,80 @@
 </div>
 
 <x-ui.card class="border-none shadow-sm">
-    <x-ui.card-header class="pb-2 flex items-center justify-between">
-        <x-ui.card-title>{{ __('my_tasks') }}</x-ui.card-title>
+    <x-ui.card-header class="pb-2 flex items-center justify-between flex-wrap gap-2">
+        <x-ui.card-title>Görevlerim</x-ui.card-title>
     </x-ui.card-header>
     <x-ui.card-content>
-        <x-ui.table>
-            <x-ui.table-header>
-                <x-ui.table-row>
-                    <x-ui.table-head>Görev</x-ui.table-head>
-                    <x-ui.table-head>Öncelik</x-ui.table-head>
-                    <x-ui.table-head>Durum</x-ui.table-head>
-                    <x-ui.table-head>Bitiş Tarihi</x-ui.table-head>
-                    <x-ui.table-head></x-ui.table-head>
-                </x-ui.table-row>
-            </x-ui.table-header>
-            <x-ui.table-body>
-                @forelse($tasks ?? [] as $task)
-                <x-ui.table-row>
-                    <x-ui.table-cell class="font-medium">{{ $task->title }}</x-ui.table-cell>
-                    <x-ui.table-cell>
-                        <x-ui.badge variant="{{ $task->priority === 'urgent' ? 'destructive' : ($task->priority === 'high' ? 'default' : 'secondary') }}">
-                            {{ ucfirst($task->priority) }}
-                        </x-ui.badge>
-                    </x-ui.table-cell>
-                    <x-ui.table-cell>
-                        <x-ui.badge variant="{{ $task->status === 'completed' ? 'default' : ($task->status === 'in_progress' ? 'secondary' : 'outline') }}">
-                            {{ ucfirst(str_replace('_', ' ', $task->status)) }}
-                        </x-ui.badge>
-                    </x-ui.table-cell>
-                    <x-ui.table-cell>
-                        @if($task->due_date)
-                            {{ \Carbon\Carbon::parse($task->due_date)->format('d.m.Y') }}
-                        @else
-                            <span class="text-muted-foreground">-</span>
-                        @endif
-                    </x-ui.table-cell>
-                    <x-ui.table-cell>
-                        <form method="POST" action="{{ route('staff.tasks.updateStatus', $task) }}" class="inline">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="status" value="{{ $task->status === 'pending' ? 'in_progress' : ($task->status === 'in_progress' ? 'completed' : 'pending') }}" />
-                            <x-ui.button size="sm" variant="outline" type="submit">
-                                {{ $task->status === 'pending' ? 'Başlat' : ($task->status === 'in_progress' ? 'Tamamla' : 'Yeniden Aç') }}
-                            </x-ui.button>
-                        </form>
-                    </x-ui.table-cell>
-                </x-ui.table-row>
-                @empty
-                <x-ui.table-row>
-                    <x-ui.table-cell colspan="5" class="text-center py-8 text-muted-foreground">
-                        Henüz görev yok
-                    </x-ui.table-cell>
-                </x-ui.table-row>
-                @endforelse
-            </x-ui.table-body>
-        </x-ui.table>
+        <div class="overflow-x-auto">
+            <x-ui.table>
+                <x-ui.table-header>
+                    <x-ui.table-row>
+                        <x-ui.table-head class="min-w-[200px]">Görev</x-ui.table-head>
+                        <x-ui.table-head class="hidden sm:table-cell">Öncelik</x-ui.table-head>
+                        <x-ui.table-head class="hidden md:table-cell">Durum</x-ui.table-head>
+                        <x-ui.table-head class="hidden lg:table-cell">Bitiş Tarihi</x-ui.table-head>
+                        <x-ui.table-head class="text-right">İşlem</x-ui.table-head>
+                    </x-ui.table-row>
+                </x-ui.table-header>
+                <x-ui.table-body>
+                    @forelse($tasks ?? [] as $task)
+                    <x-ui.table-row>
+                        <x-ui.table-cell class="font-medium">
+                            <div class="flex flex-col gap-1">
+                                <span>{{ $task->title }}</span>
+                                <div class="flex flex-wrap gap-2 sm:hidden">
+                                    <x-ui.badge variant="{{ $task->priority === 'urgent' ? 'destructive' : ($task->priority === 'high' ? 'default' : 'secondary') }}" class="text-xs">
+                                        {{ ucfirst($task->priority) }}
+                                    </x-ui.badge>
+                                    <x-ui.badge variant="{{ $task->status === 'completed' ? 'default' : ($task->status === 'in_progress' ? 'secondary' : 'outline') }}" class="text-xs">
+                                        {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                    </x-ui.badge>
+                                    @if($task->due_date)
+                                        <span class="text-xs text-muted-foreground">
+                                            {{ \Carbon\Carbon::parse($task->due_date)->format('d.m.Y') }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </x-ui.table-cell>
+                        <x-ui.table-cell class="hidden sm:table-cell">
+                            <x-ui.badge variant="{{ $task->priority === 'urgent' ? 'destructive' : ($task->priority === 'high' ? 'default' : 'secondary') }}">
+                                {{ ucfirst($task->priority) }}
+                            </x-ui.badge>
+                        </x-ui.table-cell>
+                        <x-ui.table-cell class="hidden md:table-cell">
+                            <x-ui.badge variant="{{ $task->status === 'completed' ? 'default' : ($task->status === 'in_progress' ? 'secondary' : 'outline') }}">
+                                {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                            </x-ui.badge>
+                        </x-ui.table-cell>
+                        <x-ui.table-cell class="hidden lg:table-cell">
+                            @if($task->due_date)
+                                {{ \Carbon\Carbon::parse($task->due_date)->format('d.m.Y') }}
+                            @else
+                                <span class="text-muted-foreground">-</span>
+                            @endif
+                        </x-ui.table-cell>
+                        <x-ui.table-cell class="text-right">
+                            <form method="POST" action="{{ route('staff.tasks.updateStatus', $task) }}" class="inline">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="status" value="{{ $task->status === 'pending' ? 'in_progress' : ($task->status === 'in_progress' ? 'completed' : 'pending') }}" />
+                                <x-ui.button size="sm" variant="outline" type="submit" class="w-full sm:w-auto">
+                                    {{ $task->status === 'pending' ? 'Başlat' : ($task->status === 'in_progress' ? 'Tamamla' : 'Yeniden Aç') }}
+                                </x-ui.button>
+                            </form>
+                        </x-ui.table-cell>
+                    </x-ui.table-row>
+                    @empty
+                    <x-ui.table-row>
+                        <x-ui.table-cell colspan="5" class="text-center py-8 text-muted-foreground">
+                            Henüz görev yok
+                        </x-ui.table-cell>
+                    </x-ui.table-row>
+                    @endforelse
+                </x-ui.table-body>
+            </x-ui.table>
+        </div>
     </x-ui.card-content>
 </x-ui.card>
 
